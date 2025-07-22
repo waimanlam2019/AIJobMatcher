@@ -17,9 +17,10 @@ import java.net.http.HttpResponse;
 import java.util.List;
 
 public class Scraper {
-    private static final Integer MAX_JOBS = 10; // Limit to 10 jobs for demo purposes
+    private static final String INIT_URL = "https://hk.jobsdb.com/jobs-in-information-communication-technology?sortmode=ListedDate";
+    private static final Integer MAX_JOBS = Integer.valueOf(ConfigLoader.get("max.jobs")); // Limit to 10 jobs for demo purposes
     public static void main(String[] args) {
-        Integer jobCount = 0;
+
         // Setup ChromeDriver automatically
         WebDriverManager.chromedriver().setup();
 
@@ -32,15 +33,14 @@ public class Scraper {
         options.addArguments("user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 " +
                 "(KHTML, like Gecko) Chrome/115.0.0.0 Safari/537.36");
 
-        System.setProperty("webdriver.chrome.driver", "C:\\Users\\USER\\Downloads\\chromedriver-win64\\chromedriver-win64\\chromedriver.exe");
+        System.setProperty("webdriver.chrome.driver", ConfigLoader.get("chrome.driver.path"));
 
         WebDriver listDriver  = new ChromeDriver(options);
         WebDriver detailDriver = new ChromeDriver(options);
 
         try {
 
-            String url = "https://hk.jobsdb.com/jobs-in-information-communication-technology?sortmode=ListedDate";
-            listDriver .get(url);
+            listDriver .get(INIT_URL);
 
             // Wait for jobs to load (basic sleep; for production use WebDriverWait)
             Thread.sleep(5000);
@@ -53,10 +53,11 @@ public class Scraper {
                 return;
             }
 
+            int jobCount = 0;
             for (WebElement job : jobCards) {
                 System.out.println("Checking job...");
                 if (jobCount>MAX_JOBS){
-                    System.exit(0);
+                    return;
                 }
                 String title = job.findElement(By.cssSelector("a[data-automation=jobTitle]")).getText();
                 String company = job.findElement(By.cssSelector("a[data-automation=jobCompany]")).getText();
@@ -84,13 +85,6 @@ public class Scraper {
 
                 // Or get only the visible text (stripped of tags)
                 String jobDescriptionText = jobDescDiv.getText();
-
-                //System.out.println("=== Job Description (Text) ===");
-                //System.out.println(jobDescriptionText);
-
-                // Optional: if you want the raw HTML for further processing
-                // System.out.println("=== Job Description (HTML) ===");
-                // System.out.println(jobDescriptionHtml);
 
                 String candidateProfile = "Wai Man Lam (Ray) is a Hong Kong permanent resident and experienced software engineer with over 10 years in software development and system analysis. He holds a Computer Science degree from Hong Kong Baptist University, where he worked with Python on his final year project.\n" +
                         "\n" +
@@ -145,17 +139,15 @@ public class Scraper {
                 // Print it nicely
                 System.out.println("Ollama Suggestion:\n" + suggestion.trim());
 
-               //if (suggestion.matches("(?s).*Shortlist Flag:\\s*YES.*")) {
+               if (suggestion.matches("(?s).*Shortlist Flag:\\s*YES.*")) {
                     String subject = "💼 New Job Match Found!";
                     String body = "Title: " + title + "\n\n" + "Company: " + company + "\n\n" + jobUrl + "\n\n";
                     body += "You might be a good fit for this job:\n\n" + jobDescriptionText + "\n\nAI says:\n" + suggestion.trim();
 
                     EmailNotifier.sendEmail(subject, body);
-               // }
+               }
 
-                break;
-
-                //jobCount++;
+                jobCount++;
             }
         } catch (Exception e) {
             e.printStackTrace();
