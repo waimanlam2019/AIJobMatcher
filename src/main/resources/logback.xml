@@ -1,0 +1,24 @@
+<configuration>
+
+    <!-- Console appender -->
+    <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
+        </encoder>
+    </appender>
+
+    <!-- Suppress third-party DEBUG spam -->
+    <logger name="org.asynchttpclient" level="WARN" />
+    <logger name="org.apache" level="WARN" />
+    <logger name="org.openqa.selenium" level="WARN" />
+    <logger name="org.slf4j" level="WARN" />
+
+    <!-- Your app's logging level -->
+    <logger name="site.raylambytes" level="INFO" />
+
+    <!-- Root logger -->
+    <root level="WARN">
+        <appender-ref ref="STDOUT" />
+    </root>
+
+</configuration>

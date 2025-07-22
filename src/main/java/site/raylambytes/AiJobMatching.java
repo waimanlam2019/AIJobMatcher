@@ -9,6 +9,8 @@ import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.chrome.ChromeOptions;
 import org.openqa.selenium.chrome.ChromeDriver;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.net.URI;
 import java.net.http.HttpClient;
@@ -16,9 +18,10 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.util.List;
 
-public class Scraper {
+public class AiJobMatching {
     private static final String INIT_URL = "https://hk.jobsdb.com/jobs-in-information-communication-technology?sortmode=ListedDate";
-    private static final Integer MAX_JOBS = Integer.valueOf(ConfigLoader.get("max.jobs")); // Limit to 10 jobs for demo purposes
+    private static final Integer MAX_JOBS = Integer.valueOf(ConfigLoader.get("max.jobs")); // Limit to 10 jobs
+    private static final Logger logger = LoggerFactory.getLogger(AiJobMatching.class);// for demo purposes
     public static void main(String[] args) {
 
         // Setup ChromeDriver automatically
@@ -35,7 +38,7 @@ public class Scraper {
 
         System.setProperty("webdriver.chrome.driver", ConfigLoader.get("chrome.driver.path"));
 
-        WebDriver listDriver  = new ChromeDriver(options);
+        WebDriver listDriver = new ChromeDriver(options);
         WebDriver detailDriver = new ChromeDriver(options);
 
         try {
@@ -46,30 +49,29 @@ public class Scraper {
             Thread.sleep(5000);
 
             // Find all job cards by their attribute
-            List<WebElement> jobCards = listDriver .findElements(By.cssSelector("article[data-card-type=JobCard]"));
-            System.out.println("Found " + jobCards.size() + " job cards.");
-            if (jobCards.isEmpty()) {
-                System.out.println("❌ No job cards found. Exiting.");
+            List<WebElement> jobList = listDriver .findElements(By.cssSelector("article[data-card-type=JobCard]"));
+            logger.info("Found " + jobList.size() + " job(s) on jobsdb link.");
+            if (jobList.isEmpty()) {
+                logger.info("❌ No job found. Exiting.");
                 return;
             }
 
             int jobCount = 0;
-            for (WebElement job : jobCards) {
-                System.out.println("Checking job...");
+            for (WebElement job : jobList) {
+                logger.info("Checking job...");
                 if (jobCount>MAX_JOBS){
                     return;
                 }
                 String title = job.findElement(By.cssSelector("a[data-automation=jobTitle]")).getText();
                 String company = job.findElement(By.cssSelector("a[data-automation=jobCompany]")).getText();
                 String location = job.findElement(By.cssSelector("span[data-automation=jobLocation]")).getText();
-                String shortDesc = job.findElement(By.cssSelector("span[data-testid=job-card-teaser]")).getText();
                 String jobUrl = job.findElement(By.cssSelector("a[data-automation=jobTitle]")).getAttribute("href");
 
-                System.out.println("🔹 Title: " + title);//Check
-                System.out.println("🏢 Company: " + company);//Check
-                System.out.println("📍 Location: " + location);
-                System.out.println("🔗 URL: " + jobUrl);
-                System.out.println("--------------------------------------------------");
+                logger.info("\uD83D\uDD39 Title: {}", title);//Check
+                logger.info("\uD83C\uDFE2 Company: {}", company);//Check
+                logger.info("\uD83D\uDCCD Location: {}", location);
+                logger.info("\uD83D\uDD17 URL: {}", jobUrl);
+                logger.info("--------------------------------------------------");
 
                 // After navigating to the job URL, e.g.:
                 detailDriver.get(jobUrl);
@@ -137,12 +139,12 @@ public class Scraper {
                 String suggestion = choices.getJSONObject(0).getString("text");
 
                 // Print it nicely
-                System.out.println("Ollama Suggestion:\n" + suggestion.trim());
+                logger.info("Ollama Suggestion:\n{}", suggestion.trim());
 
                if (suggestion.matches("(?s).*Shortlist Flag:\\s*YES.*")) {
-                    String subject = "💼 New Job Match Found!";
-                    String body = "Title: " + title + "\n\n" + "Company: " + company + "\n\n" + jobUrl + "\n\n";
-                    body += "You might be a good fit for this job:\n\n" + jobDescriptionText + "\n\nAI says:\n" + suggestion.trim();
+                    String subject = "💼 New Job Match Found!" + title + " at " + company;
+                    String body = "Title: " + title + "<br/>" + "Company: " + company + "<br/>" + jobUrl + "<br/><br/>";
+                    body += "You might be a good fit for this job:<br/>" + "<div style=\"border: 2px solid #333333; padding: 15px; border-radius: 6px; margin-bottom: 20px;\">"+jobDescriptionHtml+"</div>" + "<br/>AI says<br/>" + "<div style=\"background-color: #f0f4f8; border-left: 4px solid #3b82f6; padding: 15px; margin-top: 20px; font-family: monospace; white-space: pre-wrap;line-height: 1.5;\">"+"<pre>" +suggestion.trim() +"</pre></div>";
 
                     EmailNotifier.sendEmail(subject, body);
                }
@@ -150,7 +152,7 @@ public class Scraper {
                 jobCount++;
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            logger.error("An expected error occurred during scraping: ", e);
         } finally {
             listDriver.quit();
             detailDriver.quit();
