@@ -154,7 +154,7 @@ public class AiJobMatching {
                             String aiSuggestionStyle="<div style=\"background-color: #f0f4f8; border-left: 4px solid #3b82f6; padding: 15px; margin-top: 20px; font-family: monospace; white-space: pre-wrap;line-height: 1.5;\">";
                             body+="</div><br/>AI says<br/>" + aiSuggestionStyle + "<pre>" +suggestion.trim() +"</pre></div>";
 
-                            EmailNotifier.doSendEmail(subject, body);
+                            EmailNotifier.sendEmail(subject, body);
                         }
                     });
         } catch (Exception e) {
