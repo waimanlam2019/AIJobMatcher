@@ -29,7 +29,7 @@ public class SeleniumJobScraper implements JobScraper {
     @Override
     public List<WebElement> scrapeJobCardListing() {
         logger.info("Retrieving job cards from: {}", baseUrl);
-        listWebDriver.get(baseUrl);
+        RetryUtils.retryVoid(3, 2000, () -> listWebDriver.get(baseUrl));
 
         // Wait for jobs to load (basic sleep; for production use WebDriverWait)
         try {
@@ -69,7 +69,8 @@ public class SeleniumJobScraper implements JobScraper {
     @Override
     public JobPosting scrapeJobDetails(JobPosting jobPosting) {
         logger.info("Retrieving job details from: {}", jobPosting.getUrl());
-        detailWebDriver.get(jobPosting.getUrl());
+        RetryUtils.retryVoid(3, 2000, () -> detailWebDriver.get(jobPosting.getUrl()));
+
         try {
             Thread.sleep(5000);
         } catch (InterruptedException e) {

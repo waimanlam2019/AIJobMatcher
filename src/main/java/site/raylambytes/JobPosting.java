@@ -58,4 +58,14 @@ public class JobPosting {
     public void setUrl(String url) {
         this.url = url;
     }
+
+    @Override
+    public String toString() {
+        return "JobPosting{" +
+                "title='" + title + '\'' +
+                ", company='" + company + '\'' +
+                ", location='" + location + '\'' +
+                ", url='" + url + '\'' +
+                '}';
+    }
 }

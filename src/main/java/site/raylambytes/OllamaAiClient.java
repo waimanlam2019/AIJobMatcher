@@ -10,17 +10,20 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 
 public class OllamaAiClient  implements AiClient {
+    private final String aiModel;
     private final HttpClient client;
     private final String endpoint;
 
-    public OllamaAiClient(HttpClient client, String endpoint) {
+
+    public OllamaAiClient(String aiModel, HttpClient client, String endpoint) {
+        this.aiModel = aiModel;
         this.client = client;
         this.endpoint = endpoint;
     }
 
     @Override
     public String query(String prompt) {
-        String jsonPayload = "{\"model\":\"mistral\", \"prompt\":\"" + prompt + "\"}";
+        String jsonPayload = "{\"model\":\"" + aiModel + "\", \"prompt\":\"" + prompt + "\"}";
 
         HttpRequest request = HttpRequest.newBuilder()
                 .uri(URI.create("http://localhost:11434/v1/completions"))

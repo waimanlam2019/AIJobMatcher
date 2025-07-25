@@ -53,13 +53,14 @@ public class AiJobMatching {
                         JobPosting jobPosting = jobScraper.digestJobCard(jobCard);
                         jobPosting = jobScraper.scrapeJobDetails(jobPosting);
 
-                        logger.info("Job Posting Details:\n{}", jobPosting);
-
                         String candidateProfile = ConfigLoader.get("candidate.profile");
                         PromptBuilder promptBuilder = new PromptBuilder(candidateProfile, jobPosting.getDescription());
-
-                        AiClient aiClient = new OllamaAiClient(HttpClient.newHttpClient(), "http://localhost:11434/v1/completions");
-                        String suggestion = aiClient.query(promptBuilder.buildPrompt());
+                        String prompt = promptBuilder.buildPrompt();
+                        logger.info("Prompt: {}", prompt);
+                        String aiModel = ConfigLoader.get("ai.model");
+                        logger.info("Using AI model: {}", aiModel);
+                        AiClient aiClient = new OllamaAiClient(aiModel, HttpClient.newHttpClient(), "http://localhost:11434/v1/completions");
+                        String suggestion = aiClient.query(prompt);
 
                         // Print it nicely
                         logger.info("Ollama Suggestion:\n{}", suggestion.trim());
