@@ -53,12 +53,16 @@ public class SeleniumJobScraper implements JobScraper {
         String company = webElement.findElement(By.cssSelector("a[data-automation=jobCompany]")).getText();
         String location = webElement.findElement(By.cssSelector("span[data-automation=jobLocation]")).getText();
         String jobUrl = webElement.findElement(By.cssSelector("a[data-automation=jobTitle]")).getAttribute("href");
+        String jobId = webElement.getAttribute("data-job-id");
 
+        logger.info("\uD83D\uDD17 Job Id: {}", jobId);
         logger.info("\uD83D\uDD39 Title: {}", title);//Check
         logger.info("\uD83C\uDFE2 Company: {}", company);//Check
         logger.info("\uD83D\uDCCD Location: {}", location);
         logger.info("\uD83D\uDD17 URL: {}", jobUrl);
+
         JobPosting jobPosting = new JobPosting();
+        jobPosting.setJobId(jobId);
         jobPosting.setTitle(title);
         jobPosting.setCompany(company);
         jobPosting.setLocation(location);

@@ -17,7 +17,9 @@ import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.util.Arrays;
 import java.util.List;
+import java.util.Random;
 
 public class AiJobMatching {
     private static final String INIT_URL = "https://hk.jobsdb.com/jobs-in-information-communication-technology?sortmode=ListedDate";
@@ -32,15 +34,36 @@ public class AiJobMatching {
         ChromeOptions options = new ChromeOptions();
         options.addArguments("--headless=new"); // new headless mode for Chrome > 109
         options.addArguments("--window-size=1920,1080");
+        options.addArguments("--disable-blink-features=AutomationControlled");
+        options.addArguments("--disable-infobars");
         options.addArguments("--disable-gpu");
         options.addArguments("--no-sandbox");
-        options.addArguments("user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 " +
-                "(KHTML, like Gecko) Chrome/115.0.0.0 Safari/537.36");
+        List<String> userAgents = Arrays.asList(
+                "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/117.0.0.0 Safari/537.36",
+                "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/15.1 Safari/605.1.15",
+                "Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36",
+                "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/113.0.0.0 Safari/537.36",
+                "Mozilla/5.0 (iPhone; CPU iPhone OS 16_3 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.0 Mobile/15E148 Safari/604.1"
+        );
+        Random rand = new Random();
+        String randomUserAgent = userAgents.get(rand.nextInt(userAgents.size()));
+        options.addArguments("user-agent="+randomUserAgent);
+
+        // ✅ Disguise automation
+        options.setExperimentalOption("excludeSwitches", Arrays.asList("enable-automation"));
+        options.setExperimentalOption("useAutomationExtension", false);
 
         System.setProperty("webdriver.chrome.driver", ConfigLoader.get("chrome.driver.path"));
 
         WebDriver listWebDriver = new ChromeDriver(options);
         WebDriver detailWebDriver = new ChromeDriver(options);
+        // ✅ More stealth: remove webdriver property using JS
+        ((ChromeDriver) listWebDriver).executeScript(
+                "Object.defineProperty(navigator, 'webdriver', {get: () => undefined})");
+        ((ChromeDriver) detailWebDriver).executeScript(
+                "Object.defineProperty(navigator, 'webdriver', {get: () => undefined})");
+
+
         SeleniumJobScraper jobScraper = new SeleniumJobScraper(listWebDriver, detailWebDriver,  INIT_URL);
 
         try {

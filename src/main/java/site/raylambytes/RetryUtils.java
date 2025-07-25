@@ -9,12 +9,12 @@ public class RetryUtils {
     private static final Logger logger = LoggerFactory.getLogger(RetryUtils.class);
     public static <T> T retry(int maxAttempts, long delayMillis, Supplier<T> action) {
         int attempts = 0;
-        RuntimeException lastException = null;
+        Exception lastException = null;
 
         while (attempts < maxAttempts) {
             try {
                 return action.get();
-            } catch (RuntimeException e) {
+            } catch (Exception e) {
                 logger.info("Attempt " + (attempts + 1) + " failed: " + e.getMessage());
                 lastException = e;
                 attempts++;

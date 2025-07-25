@@ -1,6 +1,7 @@
 package site.raylambytes;
 
 public class JobPosting {
+    private String jobId;
     private String title;
     private String company;
     private String location;
@@ -59,13 +60,19 @@ public class JobPosting {
         this.url = url;
     }
 
+    public String getJobId() {
+        return jobId;
+    }
+    public void setJobId(String jobId) {
+        this.jobId = jobId;
+    }
     @Override
     public String toString() {
         return "JobPosting{" +
-                "title='" + title + '\'' +
+                "jobId='" + jobId + '\'' +
+                ", title='" + title + '\'' +
                 ", company='" + company + '\'' +
                 ", location='" + location + '\'' +
-                ", url='" + url + '\'' +
                 '}';
     }
 }
