@@ -53,6 +53,14 @@
         </dependency>
 
         <dependency>
+            <groupId>org.junit.platform</groupId>
+            <artifactId>junit-platform-suite</artifactId>
+            <version>1.10.0</version> <!-- Match your Jupiter version if possible -->
+            <scope>test</scope>
+        </dependency>
+
+
+        <dependency>
             <groupId>org.mockito</groupId>
             <artifactId>mockito-core</artifactId>
             <version>5.12.0</version> <!-- Or latest stable -->

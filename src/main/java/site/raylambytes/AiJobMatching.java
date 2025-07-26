@@ -12,11 +12,7 @@ import org.openqa.selenium.chrome.ChromeDriver;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
-import java.net.URI;
 import java.net.http.HttpClient;
-import java.net.http.HttpRequest;
-import java.net.http.HttpResponse;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Random;
@@ -88,7 +84,7 @@ public class AiJobMatching {
                         // Print it nicely
                         logger.info("Ollama Suggestion:\n{}", suggestion.trim());
 
-                        if (aiClient.isJobGoodToApply(suggestion)) {
+                        if (ResponseAnalyzer.isJobGoodToApply(suggestion)) {
                             String subject = "💼 New Job Match Found!" + jobPosting.getTitle() + " at " + jobPosting.getCompany();
                             String body = "Title: " + jobPosting.getTitle() + "<br/>" + "Company: " + jobPosting.getCompany() + "<br/>" + jobPosting.getUrl() + "<br/><br/>You might be a good fit for this job:<br/>" ;
                             String jobDescriptionStyle="<div style=\"border: 2px solid #333333; padding: 15px; border-radius: 6px; margin-bottom: 20px;\">";

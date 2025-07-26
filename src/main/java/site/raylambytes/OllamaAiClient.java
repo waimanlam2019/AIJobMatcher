@@ -42,9 +42,4 @@ public class OllamaAiClient implements AiClient {
         return choices.getJSONObject(0).getString("text");
     }
 
-    @Override
-    public boolean isJobGoodToApply(String queryResult) {
-        return queryResult.matches("(?s).*Shortlist Flag:\\s*YES.*");
-    }
-
 }
