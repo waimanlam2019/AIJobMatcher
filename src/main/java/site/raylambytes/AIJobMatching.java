@@ -2,9 +2,6 @@ package site.raylambytes;
 
 
 import io.github.bonigarcia.wdm.WebDriverManager;
-import org.json.JSONArray;
-import org.json.JSONObject;
-import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.chrome.ChromeOptions;
@@ -17,10 +14,10 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Random;
 
-public class AiJobMatching {
+public class AIJobMatching {
     private static final String INIT_URL = "https://hk.jobsdb.com/jobs-in-information-communication-technology?sortmode=ListedDate";
     private static final Integer MAX_JOBS = Integer.valueOf(ConfigLoader.get("max.jobs")); // Limit to 10 jobs
-    private static final Logger logger = LoggerFactory.getLogger(AiJobMatching.class);// for demo purposes
+    private static final Logger logger = LoggerFactory.getLogger(AIJobMatching.class);// for demo purposes
     public static void main(String[] args) {
 
         // Setup ChromeDriver automatically
@@ -78,7 +75,7 @@ public class AiJobMatching {
                         logger.info("Prompt: {}", prompt);
                         String aiModel = ConfigLoader.get("ai.model");
                         logger.info("Using AI model: {}", aiModel);
-                        AiClient aiClient = new OllamaAiClient(aiModel, HttpClient.newHttpClient(), "http://localhost:11434/v1/completions");
+                        AIClient aiClient = new OllamaAIClient(aiModel, HttpClient.newHttpClient(), "http://localhost:11434/v1/completions");
                         String suggestion = aiClient.query(prompt);
 
                         // Print it nicely

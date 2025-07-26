@@ -1,5 +1,5 @@
 package site.raylambytes;
 
-public interface AiClient {
+public interface AIClient {
     String query(String prompt);
 }

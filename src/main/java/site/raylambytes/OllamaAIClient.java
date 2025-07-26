@@ -9,12 +9,12 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 
-public class OllamaAiClient implements AiClient {
+public class OllamaAIClient implements AIClient {
     private final String aiModel;
     private final HttpClient client;
     private final String endpoint;
 
-    public OllamaAiClient(String aiModel, HttpClient client, String endpoint) {
+    public OllamaAIClient(String aiModel, HttpClient client, String endpoint) {
         this.aiModel = aiModel;
         this.client = client;
         this.endpoint = endpoint;
