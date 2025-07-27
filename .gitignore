@@ -38,4 +38,5 @@ build/
 .DS_Store
 
 config.properties
+config-part-time.properties
 config-docker.properties
