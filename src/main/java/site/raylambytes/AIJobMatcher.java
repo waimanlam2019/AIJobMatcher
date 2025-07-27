@@ -14,10 +14,10 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Random;
 
-public class AIJobMatching {
+public class AIJobMatcher {
     private static final String INIT_URL = "https://hk.jobsdb.com/jobs-in-information-communication-technology?sortmode=ListedDate";
     private static final Integer MAX_JOBS = Integer.valueOf(ConfigLoader.get("max.jobs")); // Limit to 10 jobs
-    private static final Logger logger = LoggerFactory.getLogger(AIJobMatching.class);// for demo purposes
+    private static final Logger logger = LoggerFactory.getLogger(AIJobMatcher.class);// for demo purposes
     public static void main(String[] args) {
 
         // Setup ChromeDriver automatically
