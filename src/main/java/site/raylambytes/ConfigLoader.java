@@ -5,20 +5,21 @@ import java.io.InputStream;
 import java.util.Properties;
 
 public class ConfigLoader {
-    private static final Properties properties = new Properties();
+    private final Properties properties;
 
-    static {
-        try (InputStream input = ConfigLoader.class.getClassLoader().getResourceAsStream("config.properties")) {
+    public ConfigLoader(String configFilePath) {
+        properties = new Properties();
+        try (InputStream input = getClass().getClassLoader().getResourceAsStream(configFilePath)) {
             if (input == null) {
-                throw new RuntimeException("config.properties not found in classpath");
+                throw new RuntimeException("Configuration file not found: " + configFilePath);
             }
             properties.load(input);
         } catch (IOException ex) {
-            throw new RuntimeException("Failed to load configuration", ex);
+            throw new RuntimeException("Failed to load configuration from " + configFilePath, ex);
         }
     }
 
-    public static String get(String key) {
+    public String get(String key) {
         return properties.getProperty(key);
     }
 }

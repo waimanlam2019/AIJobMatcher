@@ -15,7 +15,7 @@ RUN apt-get update && apt-get install -y \
     libxcomposite1 libxdamage1 libxrandr2 xdg-utils \
     && rm -rf /var/lib/apt/lists/*
 
-ARG CHROME_VERSION=117.0.5938.92-1
+ARG CHROME_VERSION=138.0.7204.168-1
 
 # Optional: Install Chrome if you're using Selenium with ChromeDriver
 RUN wget -q -O - https://dl.google.com/linux/linux_signing_key.pub | apt-key add - && \
@@ -24,35 +24,15 @@ RUN wget -q -O - https://dl.google.com/linux/linux_signing_key.pub | apt-key add
     apt-get install -y google-chrome-stable=${CHROME_VERSION} && \
     apt-mark hold google-chrome-stable
 
+ARG CHROME_DRIVER_VERSION=138.0.7204.168
 # Install matching ChromeDriver
-RUN wget -q https://edgedl.me.gvt1.com/edgedl/chrome/chrome-for-testing/${CHROME_VERSION}/linux64/chromedriver-linux64.zip && \
+RUN wget -q https://edgedl.me.gvt1.com/edgedl/chrome/chrome-for-testing/${CHROME_DRIVER_VERSION}/linux64/chromedriver-linux64.zip && \
     unzip chromedriver-linux64.zip && \
     mv chromedriver-linux64/chromedriver /usr/local/bin/chromedriver && \
     chmod +x /usr/local/bin/chromedriver && \
     rm -rf chromedriver-linux64.zip chromedriver-linux64
 
-# Set default command
-CMD ["google-chrome-stable", "--version"]
-
-# Install Ollama (official)
-RUN curl -fsSL https://ollama.com/install.sh | bash
-
-# Expose Ollama's default API port
-EXPOSE 11434
-
-CMD ollama pull mistral
-CMD ollama pill LLaMA3:8B
+COPY target/AIJobMatcher-1.0-SNAPSHOT.jar app.jar
+CMD ["java", "-jar", "app.jar"]
 
 
-# Copy your application JAR
-WORKDIR /app
-# Copy your app into container
-COPY . .
-
-# Build the app with Maven
-RUN mvn clean package -DskipTests
-
-
-
-# Run Ollama as background daemon + your app
-CMD ollama serve & java -jar app.jar

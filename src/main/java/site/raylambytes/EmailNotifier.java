@@ -10,11 +10,8 @@ public class EmailNotifier {
     private static final Logger logger = LoggerFactory.getLogger(EmailNotifier.class);// for demo pu
 
 
-    public static void sendEmail(String subject, String body) {
+    public static void sendEmail(String from, String password, String to, String subject, String body) {
         logger.info("Preparing to send an email..");
-        String from = ConfigLoader.get("email.from");
-        String password = ConfigLoader.get("email.password");
-        String to = ConfigLoader.get("email.to");
 
         Properties props = new Properties();
         props.put("mail.smtp.auth", "true");

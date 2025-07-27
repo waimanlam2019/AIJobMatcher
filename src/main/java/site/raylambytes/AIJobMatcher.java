@@ -16,10 +16,11 @@ import java.util.Random;
 
 public class AIJobMatcher {
     private static final String INIT_URL = "https://hk.jobsdb.com/jobs-in-information-communication-technology?sortmode=ListedDate";
-    private static final Integer MAX_JOBS = Integer.valueOf(ConfigLoader.get("max.jobs")); // Limit to 10 jobs
     private static final Logger logger = LoggerFactory.getLogger(AIJobMatcher.class);// for demo purposes
     public static void main(String[] args) {
 
+        System.out.println("System property CONFIG_FILE_PATH: " + System.getenv("CONFIG_FILE_PATH"));
+        ConfigLoader configLoader = new ConfigLoader(System.getenv("CONFIG_FILE_PATH"));
         // Setup ChromeDriver automatically
         WebDriverManager.chromedriver().setup();
 
@@ -46,7 +47,7 @@ public class AIJobMatcher {
         options.setExperimentalOption("excludeSwitches", Arrays.asList("enable-automation"));
         options.setExperimentalOption("useAutomationExtension", false);
 
-        System.setProperty("webdriver.chrome.driver", ConfigLoader.get("chrome.driver.path"));
+        System.setProperty("webdriver.chrome.driver", configLoader.get("chrome.driver.path"));
 
         WebDriver listWebDriver = new ChromeDriver(options);
         WebDriver detailWebDriver = new ChromeDriver(options);
@@ -64,16 +65,16 @@ public class AIJobMatcher {
             List<WebElement> jobCardList = jobScraper.scrapeJobCardListing();
 
             jobCardList.stream()
-                    .limit(MAX_JOBS)
+                    .limit(Integer.valueOf(configLoader.get("max.jobs")))
                     .forEach(jobCard -> {
                         JobPosting jobPosting = jobScraper.digestJobCard(jobCard);
                         jobPosting = jobScraper.scrapeJobDetails(jobPosting);
 
-                        String candidateProfile = ConfigLoader.get("candidate.profile");
+                        String candidateProfile = configLoader.get("candidate.profile");
                         PromptBuilder promptBuilder = new PromptBuilder(candidateProfile, jobPosting.getDescription());
                         String prompt = promptBuilder.buildPrompt();
                         logger.info("Prompt: {}", prompt);
-                        String aiModel = ConfigLoader.get("ai.model");
+                        String aiModel = configLoader.get("ai.model");
                         logger.info("Using AI model: {}", aiModel);
                         AIClient aiClient = new OllamaAIClient(aiModel, HttpClient.newHttpClient(), "http://localhost:11434/v1/completions");
                         String suggestion = aiClient.query(prompt);
@@ -89,7 +90,10 @@ public class AIJobMatcher {
                             String aiSuggestionStyle="<div style=\"background-color: #f0f4f8; border-left: 4px solid #3b82f6; padding: 15px; margin-top: 20px; font-family: monospace; white-space: pre-wrap;line-height: 1.5;\">";
                             body+="</div><br/>AI says<br/>" + aiSuggestionStyle + "<pre>" +suggestion.trim() +"</pre></div>";
 
-                            EmailNotifier.sendEmail(subject, body);
+                            String from = configLoader.get("email.from");
+                            String password = configLoader.get("email.password");
+                            String to = configLoader.get("email.to");
+                            EmailNotifier.sendEmail(from, password, to, subject, body);
                         }
                     });
         } catch (Exception e) {
