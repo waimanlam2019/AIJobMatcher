@@ -15,7 +15,6 @@ import java.util.List;
 import java.util.Random;
 
 public class AIJobMatcher {
-    private static final String INIT_URL = "https://hk.jobsdb.com/jobs-in-information-communication-technology?sortmode=ListedDate";
     private static final Logger logger = LoggerFactory.getLogger(AIJobMatcher.class);// for demo purposes
     public static void main(String[] args) {
 
@@ -57,7 +56,7 @@ public class AIJobMatcher {
                 "Object.defineProperty(navigator, 'webdriver', {get: () => undefined})");
 
 
-        SeleniumJobScraper jobScraper = new SeleniumJobScraper(listWebDriver, detailWebDriver,  INIT_URL);
+        SeleniumJobScraper jobScraper = new SeleniumJobScraper(listWebDriver, detailWebDriver,  ConfigLoader.get("init.url"));
 
         try {
             // Find all job cards by their attribute
@@ -69,8 +68,10 @@ public class AIJobMatcher {
                         JobPosting jobPosting = jobScraper.digestJobCard(jobCard);
                         jobPosting = jobScraper.scrapeJobDetails(jobPosting);
 
+                        String aiRoleplay = ConfigLoader.get("ai.roleplay");
                         String candidateProfile = ConfigLoader.get("candidate.profile");
-                        PromptBuilder promptBuilder = new PromptBuilder(candidateProfile, jobPosting.getDescription());
+                        String aiTask = ConfigLoader.get("ai.task");
+                        PromptBuilder promptBuilder = new PromptBuilder(aiRoleplay, candidateProfile, jobPosting.getDescription(), aiTask);
                         String prompt = promptBuilder.buildPrompt();
                         logger.info("Prompt: {}", prompt);
                         String aiModel = ConfigLoader.get("ai.model");
