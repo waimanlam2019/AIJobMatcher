@@ -1,25 +1,23 @@
 package site.raylambytes;
 
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Properties;
 
 public class ConfigLoader {
-    private final Properties properties;
+    private static final Properties properties;
 
-    public ConfigLoader(String configFilePath) {
+    static {
         properties = new Properties();
-        try (InputStream input = getClass().getClassLoader().getResourceAsStream(configFilePath)) {
-            if (input == null) {
-                throw new RuntimeException("Configuration file not found: " + configFilePath);
-            }
+        try (InputStream input = new FileInputStream(System.getenv("CONFIG_FILE_PATH"))) {
             properties.load(input);
         } catch (IOException ex) {
-            throw new RuntimeException("Failed to load configuration from " + configFilePath, ex);
+            throw new RuntimeException("Failed to load configuration from environment variable CONFIG_FILE_PATH", ex);
         }
     }
 
-    public String get(String key) {
+    public static String get(String key) {
         return properties.getProperty(key);
     }
 }

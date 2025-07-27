@@ -7,17 +7,17 @@ services:
       - "11434:11434"
     volumes:
       - ollama_data:/root/.ollama
-    environment:
-      - OLLAMA_MODELS=llama3
     restart: unless-stopped
+    entrypoint: [ "/bin/bash", "-c", "\
+          ollama serve & \
+          sleep 5 && \
+          ollama pull mistral && wait" ]
 
   app:
     build:
       context: .
     depends_on:
       - ollama
-    environment:
-      - OLLAMA_API_URL=http://ollama:11434
 
 volumes:
   ollama_data:

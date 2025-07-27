@@ -2,6 +2,8 @@ package site.raylambytes;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.net.URI;
@@ -10,6 +12,7 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 
 public class OllamaAIClient implements AIClient {
+    private static final Logger logger = LoggerFactory.getLogger(OllamaAIClient.class);
     private final String aiModel;
     private final HttpClient client;
     private final String endpoint;
@@ -34,6 +37,7 @@ public class OllamaAIClient implements AIClient {
         try {
             response = client.send(request, HttpResponse.BodyHandlers.ofString());
         } catch (IOException | InterruptedException e) {
+            logger.error("❌ Error querying AI model: ", e);
             throw new RuntimeException(e);
         }
 

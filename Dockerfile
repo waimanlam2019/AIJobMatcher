@@ -33,6 +33,16 @@ RUN wget -q https://edgedl.me.gvt1.com/edgedl/chrome/chrome-for-testing/${CHROME
     rm -rf chromedriver-linux64.zip chromedriver-linux64
 
 COPY target/AIJobMatcher-1.0-SNAPSHOT.jar app.jar
-CMD ["java", "-jar", "app.jar"]
+COPY src/main/resources/config-docker.properties /app/config-docker.properties
+ENV CONFIG_FILE_PATH=/app/config-docker.properties
+
+CMD bash -c '\
+  echo "Waiting for Ollama to pull mistral model..." && \
+  until curl -s http://ollama:11434/api/tags | grep -q "\"model\":\"mistral:latest\""; do \
+    echo "Model not ready yet..."; \
+    sleep 2; \
+  done && \
+  echo "Mistral model is ready. Starting app..." && \
+  exec java -Dconfig.file=${CONFIG_FILE_PATH} -jar app.jar'
 
 
