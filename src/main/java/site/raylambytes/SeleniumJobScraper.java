@@ -2,6 +2,7 @@ package site.raylambytes;
 
 import io.github.bonigarcia.wdm.WebDriverManager;
 import org.openqa.selenium.By;
+import org.openqa.selenium.NoSuchElementException;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.chrome.ChromeDriver;
@@ -11,6 +12,7 @@ import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 public class SeleniumJobScraper implements JobScraper {
     private static final Logger logger = LoggerFactory.getLogger(SeleniumJobScraper.class);// for demo pu
@@ -80,6 +82,12 @@ public class SeleniumJobScraper implements JobScraper {
         } catch (InterruptedException e) {
             throw new RuntimeException(e);
         }
+        //Full Time or Part Time
+        String jobType = tryFindOptionalElement(detailWebDriver, By.cssSelector("span[data-automation='job-detail-work-type'] a"))
+                .map(WebElement::getText)
+                .orElse("Unknown");
+        logger.info("Job Type: {}", jobType);
+
         WebElement jobDescDiv = detailWebDriver.findElement(By.cssSelector("div[data-automation='jobAdDetails']"));
 
         // Get the full HTML inside the job description container
@@ -91,5 +99,21 @@ public class SeleniumJobScraper implements JobScraper {
         jobPosting.setDescription(jobDescriptionText);
         jobPosting.setDescriptionHtml(jobDescriptionHtml);
         return jobPosting;
+    }
+
+    public Optional<WebElement> tryFindOptionalElement(WebElement parent, By selector) {
+        try {
+            return Optional.of(parent.findElement(selector));
+        } catch (NoSuchElementException e) {
+            return Optional.empty();
+        }
+    }
+
+    public Optional<WebElement> tryFindOptionalElement(WebDriver driver, By selector) {
+        try {
+            return Optional.of(driver.findElement(selector));
+        } catch (NoSuchElementException e) {
+            return Optional.empty();
+        }
     }
 }

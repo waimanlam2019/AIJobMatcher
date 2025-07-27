@@ -40,3 +40,4 @@ build/
 config.properties
 config-part-time.properties
 config-docker.properties
+config-docker-part-time.properties

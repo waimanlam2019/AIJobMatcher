@@ -13,9 +13,16 @@ services:
           sleep 5 && \
           ollama pull mistral && wait" ]
 
-  app:
+  app1:
     build:
       context: .
+      dockerfile: Dockerfile-App1
+    depends_on:
+      - ollama
+  app2:
+    build:
+      context: .
+      dockerfile: Dockerfile-App2
     depends_on:
       - ollama
 
