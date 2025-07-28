@@ -51,10 +51,14 @@ public class SeleniumJobScraper implements JobScraper {
     @Override
     public JobPosting digestJobCard(WebElement webElement) {
         logger.info("Processing job card...");
-        String title = webElement.findElement(By.cssSelector("a[data-automation=jobTitle]")).getText();
-        String company = webElement.findElement(By.cssSelector("a[data-automation=jobCompany]")).getText();
-        String location = webElement.findElement(By.cssSelector("span[data-automation=jobLocation]")).getText();
-        String jobUrl = webElement.findElement(By.cssSelector("a[data-automation=jobTitle]")).getAttribute("href");
+        String title = tryFindOptionalElement(webElement, By.cssSelector("a[data-automation=jobTitle]"))
+                .map(WebElement::getText).orElse("Unknown");
+        String company = tryFindOptionalElement(webElement, By.cssSelector("a[data-automation=jobCompany]"))
+                .map(WebElement::getText).orElse("Unknown");
+        String location = tryFindOptionalElement(webElement, By.cssSelector("span[data-automation=jobLocation]"))
+                .map(WebElement::getText).orElse("Unknown");
+        String jobUrl = tryFindOptionalElement(webElement, By.cssSelector("a[data-automation=jobTitle]"))
+                .map(e->(e.getAttribute("href"))).orElse("Unknown");
         String jobId = webElement.getAttribute("data-job-id");
 
         logger.info("\uD83D\uDD17 Job Id: {}", jobId);
@@ -88,16 +92,18 @@ public class SeleniumJobScraper implements JobScraper {
                 .orElse("Unknown");
         logger.info("Job Type: {}", jobType);
 
-        WebElement jobDescDiv = detailWebDriver.findElement(By.cssSelector("div[data-automation='jobAdDetails']"));
+        Optional<WebElement> jobDescDiv = tryFindOptionalElement(detailWebDriver, By.cssSelector("div[data-automation='jobAdDetails']"));
 
-        // Get the full HTML inside the job description container
-        String jobDescriptionHtml = jobDescDiv.getAttribute("innerHTML");
+        if ( jobDescDiv.isPresent() ) {
+            // Get the full HTML inside the job description container
+            String jobDescriptionHtml = jobDescDiv.get().getAttribute("innerHTML");
 
-        // Or get only the visible text (stripped of tags)
-        String jobDescriptionText = jobDescDiv.getText();
-        logger.info("Job Description: {}", jobDescriptionText);
-        jobPosting.setDescription(jobDescriptionText);
-        jobPosting.setDescriptionHtml(jobDescriptionHtml);
+            // Or get only the visible text (stripped of tags)
+            String jobDescriptionText = jobDescDiv.get().getText();
+            logger.info("Job Description: {}", jobDescriptionText);
+            jobPosting.setDescription(jobDescriptionText);
+            jobPosting.setDescriptionHtml(jobDescriptionHtml);
+        }
         return jobPosting;
     }
 
@@ -105,6 +111,7 @@ public class SeleniumJobScraper implements JobScraper {
         try {
             return Optional.of(parent.findElement(selector));
         } catch (NoSuchElementException e) {
+            logger.warn("Element not found using selector: {}", selector);
             return Optional.empty();
         }
     }
@@ -113,6 +120,7 @@ public class SeleniumJobScraper implements JobScraper {
         try {
             return Optional.of(driver.findElement(selector));
         } catch (NoSuchElementException e) {
+            logger.warn("Element not found using selector: {}", selector);
             return Optional.empty();
         }
     }
