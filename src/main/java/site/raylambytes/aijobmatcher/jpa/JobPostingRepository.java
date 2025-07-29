@@ -1,8 +1,10 @@
 package site.raylambytes.aijobmatcher.jpa;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.Optional;
 
 @Repository
@@ -14,6 +16,11 @@ public interface JobPostingRepository extends JpaRepository<JobPosting, Integer>
     // Optional: delete by jobId
     void deleteByJobId(String jobId);
 
-    // You can add more derived queries as needed, e.g.
-    // List<JobPosting> findByCompany(String company);
+    @Query("SELECT new site.raylambytes.aijobmatcher.jpa.JobMatchingResultDTO(" +
+            "j.title, j.company, j.location, j.jobType, j.description, j.url, " +
+            "m.aiModel, m.verdict, m.shortlistFlag, m.createdAt) " +
+            "FROM JobPosting j JOIN MatchingResult m ON j.id = m.jobPosting.id")
+    List<JobMatchingResultDTO> findAllWithMatchingResults();
+
+
 }

@@ -6,10 +6,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import site.raylambytes.aijobmatcher.ai.AIClient;
-import site.raylambytes.aijobmatcher.jpa.JobPosting;
-import site.raylambytes.aijobmatcher.jpa.JobPostingRepository;
-import site.raylambytes.aijobmatcher.jpa.MatchingResult;
-import site.raylambytes.aijobmatcher.jpa.MatchingResultRepository;
+import site.raylambytes.aijobmatcher.jpa.*;
 import site.raylambytes.aijobmatcher.scraper.JobScraper;
 import site.raylambytes.aijobmatcher.util.EmailNotifier;
 import site.raylambytes.aijobmatcher.util.PromptBuilder;
@@ -102,6 +99,9 @@ public class AIJobMatcherService {
         } catch (Exception e) {
             logger.error("An expected error occurred during scraping: ", e);
         }
+    }
+    public List<JobMatchingResultDTO> getAllJobMatchingResults() {
+        return jobPostingRepository.findAllWithMatchingResults();
     }
 
 }
