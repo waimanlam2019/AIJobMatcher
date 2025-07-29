@@ -1,4 +1,4 @@
-package site.raylambytes;
+package site.raylambytes.aijobmatcher;
 
 import org.junit.platform.suite.api.SelectClasses;
 import org.junit.platform.suite.api.Suite;

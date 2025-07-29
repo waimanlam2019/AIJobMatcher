@@ -1,4 +1,4 @@
-package site.raylambytes;
+package site.raylambytes.aijobmatcher.util;
 
 public class PromptBuilder {
     private final String aiRoleplay;

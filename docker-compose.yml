@@ -1,5 +1,24 @@
 version: '3.8'
 services:
+  postgres:
+    image: postgres:16
+    container_name: my_postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: secret123
+      POSTGRES_DB: aijobmatcher
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+  pgadmin:
+    image: dpage/pgadmin4
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@example.com
+      PGADMIN_DEFAULT_PASSWORD: admin
+    ports:
+      - "8090:80"
   ollama:
     image: ollama/ollama
     container_name: ollama
@@ -13,18 +32,7 @@ services:
           sleep 5 && \
           ollama pull mistral && wait" ]
 
-  app1:
-    build:
-      context: .
-      dockerfile: Dockerfile-App1
-    depends_on:
-      - ollama
-  app2:
-    build:
-      context: .
-      dockerfile: Dockerfile-App2
-    depends_on:
-      - ollama
 
 volumes:
   ollama_data:
+  postgres_data:

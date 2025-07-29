@@ -1,15 +1,36 @@
-package site.raylambytes;
+package site.raylambytes.aijobmatcher.jpa;
 
+import jakarta.persistence.*;
+
+
+@Entity
+@Table(name = "job_postings")
 public class JobPosting {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)  // Auto increment
+    private Integer id;
+    @Column(name = "job_id", nullable = false, unique = true)
     private String jobId;
     private String title;
     private String company;
     private String location;
+    private String jobType;
+    @Column(columnDefinition="text")
     private String description;
+    @Column(columnDefinition="text")
     private String descriptionHtml;
+    @Column(columnDefinition="text")
     private String url;
 
     public JobPosting(){
+    }
+
+    public Integer getId() {
+        return id;
+    }
+
+    public void setId(Integer id) {
+        this.id = id;
     }
 
     public String getTitle() {
@@ -66,6 +87,15 @@ public class JobPosting {
     public void setJobId(String jobId) {
         this.jobId = jobId;
     }
+
+    public String getJobType() {
+        return jobType;
+    }
+
+    public void setJobType(String jobType) {
+        this.jobType = jobType;
+    }
+
     @Override
     public String toString() {
         return "JobPosting{" +

@@ -1,6 +1,8 @@
-package site.raylambytes;
+package site.raylambytes.aijobmatcher;
+
 
 import org.junit.jupiter.api.Test;
+import site.raylambytes.aijobmatcher.util.PromptBuilder;
 
 import static org.junit.jupiter.api.Assertions.*;
 

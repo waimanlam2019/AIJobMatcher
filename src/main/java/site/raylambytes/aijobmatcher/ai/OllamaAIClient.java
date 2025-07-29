@@ -1,9 +1,11 @@
-package site.raylambytes;
+package site.raylambytes.aijobmatcher.ai;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
+import site.raylambytes.aijobmatcher.AppConfig;
 
 import java.io.IOException;
 import java.net.URI;
@@ -11,16 +13,18 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 
+@Service
 public class OllamaAIClient implements AIClient {
     private static final Logger logger = LoggerFactory.getLogger(OllamaAIClient.class);
+
     private final String aiModel;
     private final HttpClient client;
     private final String endpoint;
 
-    public OllamaAIClient(String aiModel, HttpClient client, String endpoint) {
-        this.aiModel = aiModel;
-        this.client = client;
-        this.endpoint = endpoint;
+    public OllamaAIClient(AppConfig appConfig) {
+        this.aiModel = appConfig.getAiModel();
+        this.client = HttpClient.newHttpClient();
+        this.endpoint = appConfig.getAiEndpoint();
     }
 
     @Override
@@ -46,4 +50,17 @@ public class OllamaAIClient implements AIClient {
         return choices.getJSONObject(0).getString("text");
     }
 
+    @Override
+    public String getAiModel() {
+        return aiModel;
+    }
+
+    @Override
+    public String toString() {
+        return "OllamaAIClient{" +
+                "aiModel='" + aiModel + '\'' +
+                ", client=" + client +
+                ", endpoint='" + endpoint + '\'' +
+                '}';
+    }
 }

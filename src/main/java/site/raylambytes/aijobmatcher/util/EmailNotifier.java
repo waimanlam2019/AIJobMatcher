@@ -1,21 +1,28 @@
-package site.raylambytes;
+package site.raylambytes.aijobmatcher.util;
+
 import jakarta.mail.*;
-import jakarta.mail.internet.*;
+import jakarta.mail.internet.InternetAddress;
+import jakarta.mail.internet.MimeMessage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import site.raylambytes.aijobmatcher.AppConfig;
 
 import java.util.Properties;
 
+@Service
 public class EmailNotifier {
     private static final Logger logger = LoggerFactory.getLogger(EmailNotifier.class);// for demo pu
+    @Autowired
+    private AppConfig appConfig;
 
-
-    public static void sendEmail(String subject, String body) {
+    public void sendEmail(String subject, String body) {
         logger.info("Preparing to send an email..");
 
-        String from = ConfigLoader.get("email.from");
-        String password = ConfigLoader.get("email.password");
-        String to = ConfigLoader.get("email.to");
+        String from = appConfig.getEmailFrom();
+        String password = appConfig.getEmailPassword();
+        String to = appConfig.getEmailTo();
 
         Properties props = new Properties();
         props.put("mail.smtp.auth", "true");

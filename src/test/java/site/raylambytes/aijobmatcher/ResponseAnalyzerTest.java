@@ -1,7 +1,8 @@
-package site.raylambytes;
-import org.junit.jupiter.api.Test;
+package site.raylambytes.aijobmatcher;
 
-import java.net.http.HttpClient;
+import org.junit.jupiter.api.Test;
+import site.raylambytes.aijobmatcher.util.ResponseAnalyzer;
+
 
 import static org.junit.jupiter.api.Assertions.*;
 
