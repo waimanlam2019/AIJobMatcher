@@ -31,7 +31,12 @@ services:
           ollama serve & \
           sleep 5 && \
           ollama pull mistral && wait" ]
-
+  app1:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    depends_on:
+      - ollama
 
 volumes:
   ollama_data:

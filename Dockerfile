@@ -8,7 +8,7 @@ ENV LANG=C.UTF-8
 # Install system packages: Java, curl, unzip, Chrome (if needed)
 RUN apt-get update && apt-get install -y \
     wget unzip curl gnupg ca-certificates git \
-    openjdk-17-jdk maven \
+    openjdk-17-jdk maven jq \
     fonts-liberation libappindicator3-1 libasound2 \
     libatk-bridge2.0-0 libatk1.0-0 libcups2 libdbus-1-3 \
     libgdk-pixbuf2.0-0 libnspr4 libnss3 libx11-xcb1 \
@@ -32,17 +32,10 @@ RUN wget -q https://edgedl.me.gvt1.com/edgedl/chrome/chrome-for-testing/${CHROME
     chmod +x /usr/local/bin/chromedriver && \
     rm -rf chromedriver-linux64.zip chromedriver-linux64
 
-COPY target/AIJobMatcher-1.0-SNAPSHOT.jar app.jar
-COPY src/main/resources/config-docker.properties /app/config-docker.properties
-ENV CONFIG_FILE_PATH=/app/config-docker.properties
+COPY target/aijobmatcher-0.0.1-SNAPSHOT.jar /aijobmatcher.jar
+COPY wait-for-ollama.sh /wait-for-ollama.sh
+RUN chmod +x /wait-for-ollama.sh
 
-CMD bash -c '\
-  echo "Waiting for Ollama to pull mistral model..." && \
-  until curl -s http://ollama:11434/api/tags | grep -q "\"model\":\"mistral:latest\""; do \
-    echo "Model not ready yet..."; \
-    sleep 2; \
-  done && \
-  echo "Mistral model is ready. Starting app..." && \
-  exec java -Dconfig.file=${CONFIG_FILE_PATH} -jar app.jar'
+CMD ["/wait-for-ollama.sh", "java", "-jar", "aijobmatcher.jar"]
 
 
