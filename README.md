@@ -57,10 +57,38 @@ Deploy via Docker + Kubernetes
 
 Switch to OpenAI API or HuggingFace for more accurate LLM evaluation
 
+# PC Requirements for AI Job Matcher
+
+## Minimum Recommended Setup
+- **CPU:** Intel i5 10th Gen or equivalent
+- **RAM:** 16 GB
+- **GPU:** Mid-range GPU with at least 4 GB VRAM (for basic AI acceleration)
+- **Storage:** SSD for faster read/write speeds
+- **OS:** Linux preferred; Windows with WSL2 possible but with overhead
+
+This setup is suitable for light scraping (e.g., 5 jobs max), running smaller AI models like `mistral`, and casual local development.
+
+---
+
+## Smooth Sailing Setup (For Serious Usage)
+- **CPU:** 6-core / 12-thread or better (e.g. AMD Ryzen 7 5800X, Intel i7-12700)
+- **RAM:** 32 GB (handles Docker, JVM, Chrome, and Ollama comfortably)
+- **GPU:** NVIDIA RTX 3060 or better (8+ GB VRAM recommended for faster AI inference)
+- **Storage:** NVMe SSD for fast I/O
+- **OS:** Linux is preferred for performance and compatibility
+
+Recommended if you plan to scrape dozens or hundreds of jobs, run larger AI models, or want smooth, responsive performance without freezing during processing.
+
+---
+
+## Notes
+- Your older CPU (like Intel i5-6600) will work for basic testing but expect heavy CPU usage and possible freezes when running AI inference or multiple services concurrently.
+- Using GPU acceleration via Ollama helps but only if your GPU meets or exceeds minimum VRAM requirements.
+- Consider upgrading hardware or offloading heavy AI processing to a cloud or more powerful machine for large-scale jobs.
 
 # 📦 How to Run
 
-## Requirement
+## Software Requirement
 - Docker Desktop ( https://www.docker.com/products/docker-desktop/ )
 - Maven ( https://maven.apache.org/download.cgi )
 - Git ( https://git-scm.com/ )
