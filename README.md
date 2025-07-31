@@ -2,12 +2,12 @@
 
 # AI Job Matcher 🚀
 
-A full-stack Spring Boot + React web app that scrapes jobs from JobsDB, uses an AI model to evaluate their relevance to your profile. Currently it could send an email to yourself letting you know which job is suitable for you.
+A full-stack Spring Boot + React web app that scrapes jobs from a job portal, uses an AI model to evaluate their relevance to your profile. Currently it could send an email to yourself letting you know which job is suitable for you.
 
 # 🧠 What It Does
 
 This project automates the job search process with a bit of intelligence:
-- 🔍 Scrapes job listings from JobsDB using Selenium WebDriver.
+- 🔍 Scrapes job listings from a job portal using Selenium WebDriver.
 - 🧩 Matches jobs to your background using a local LLM model (Ollama).
 - 🧠 Evaluates each job’s fit with a custom prompt and returns a verdict.
 - ✅ Stores job details and AI decisions in a PostgreSQL database.
@@ -86,11 +86,33 @@ If you're using Gmail with an app (like a Java or Python program) and **2-Step V
 > 💡 **Important:** Keep this token secure. You won't need to remember it — just store it safely in your app config or secrets manager.
 
 
+## ⚙️ Possible Configuration in `application-docker.properties`
+
+Below are the essential configuration properties used to run the AI Job Matcher application in a Docker environment.
+
+### 🌐 Web Scraper Configuration
+- `app.initUrl` – Initial URL to start scraping from (JobsDB listing).
+- `app.maxJobs` – Number of job postings to scrape in one batch.
+
+### 🤖 AI Model Configuration
+- `app.aiModel` – Name of the AI model used (e.g. `mistral`).
+- `app.aiRoleplay` – Prompt that defines the AI’s personality and behavior.
+- `app.aiTask` – Template prompt for generating the structured evaluation output.
+
+### 👤 Candidate Profile
+- `app.candidateProfile` – A paragraph describing the candidate to be evaluated against job listings.
+
+### ✉️ Email Notification
+- `app.emailFrom` – Gmail account used to send notifications.
+- `app.emailPassword` – App-specific Gmail password (not your real password).
+- `app.emailTo` – Recipient address for job matching results.
+
 ## 1. Backend (Spring Boot)
 ```bash
 1. Git clone this backend repository
 2. With a terminal like bash or powershell, change directory into it
 3. Configure your own setting with application-template-docker.properties ( Mandatory: app.emailFrom, app.emailPassword, app.emailTo Optional: app.aiRoleplay , app.candidateProfile)
+4. In src/main/resources, rename application-template-docker.properties to application-docker.properties
 4. Package the program by command "mvn clean package"
 5. run command "docker compose up"
 6. Give it some time, docker will load ollama and mistral AI model, postgresql database and run the a batch job which will match the candidate profile with jobs from the init url

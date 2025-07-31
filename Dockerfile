@@ -17,25 +17,30 @@ RUN apt-get update && apt-get install -y \
 
 ARG CHROME_VERSION=138.0.7204.168-1
 
-# Optional: Install Chrome if you're using Selenium with ChromeDriver
+# Install the latest Chrome
 RUN wget -q -O - https://dl.google.com/linux/linux_signing_key.pub | apt-key add - && \
     echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" > /etc/apt/sources.list.d/google.list && \
     apt-get update && \
-    apt-get install -y google-chrome-stable=${CHROME_VERSION} && \
+    apt-get install -y google-chrome-stable && \
     apt-mark hold google-chrome-stable
 
-ARG CHROME_DRIVER_VERSION=138.0.7204.168
-# Install matching ChromeDriver
-RUN wget -q https://edgedl.me.gvt1.com/edgedl/chrome/chrome-for-testing/${CHROME_DRIVER_VERSION}/linux64/chromedriver-linux64.zip && \
-    unzip chromedriver-linux64.zip && \
-    mv chromedriver-linux64/chromedriver /usr/local/bin/chromedriver && \
+# Dynamically fetch matching ChromeDriver version
+RUN set -ex && \
+    CHROME_VERSION=$(google-chrome --version | sed 's/Google Chrome //' | cut -d'.' -f1-3) && \
+    CHROMEDRIVER_VERSION=$(curl -s "https://googlechromelabs.github.io/chrome-for-testing/last-known-good-versions-with-downloads.json" \
+        | jq -r --arg ver "$CHROME_VERSION" '.channels.Stable.version as $v | .channels.Stable.downloads.chromedriver[] | select(.platform=="linux64") | .url' \
+        | grep "$CHROME_VERSION") && \
+    wget -q "$CHROMEDRIVER_VERSION" -O chromedriver.zip && \
+    unzip chromedriver.zip && \
+    mv chromedriver-linux64/chromedriver /usr/local/bin/ && \
     chmod +x /usr/local/bin/chromedriver && \
-    rm -rf chromedriver-linux64.zip chromedriver-linux64
+    rm -rf chromedriver.zip chromedriver-linux64
+
 
 COPY target/aijobmatcher-0.0.1-SNAPSHOT.jar /aijobmatcher.jar
 COPY wait-for-ollama.sh /wait-for-ollama.sh
 RUN chmod +x /wait-for-ollama.sh
 
-CMD ["/wait-for-ollama.sh", "java", "-jar", "aijobmatcher.jar", "--spring.profiles.active=template-docker"]
+CMD ["/wait-for-ollama.sh", "java", "-jar", "aijobmatcher.jar", "--spring.profiles.active=docker"]
 
 
