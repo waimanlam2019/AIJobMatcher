@@ -36,6 +36,6 @@ COPY target/aijobmatcher-0.0.1-SNAPSHOT.jar /aijobmatcher.jar
 COPY wait-for-ollama.sh /wait-for-ollama.sh
 RUN chmod +x /wait-for-ollama.sh
 
-CMD ["/wait-for-ollama.sh", "java", "-jar", "aijobmatcher.jar"]
+CMD ["/wait-for-ollama.sh", "java", "-jar", "aijobmatcher.jar", "--spring.profiles.active=template-docker"]
 
 
