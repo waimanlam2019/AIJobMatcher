@@ -61,9 +61,9 @@ Switch to OpenAI API or HuggingFace for more accurate LLM evaluation
 # 📦 How to Run
 
 ## Requirement
-- Docker Desktop
-- Maven
-- Git
+- Docker Desktop ( https://www.docker.com/products/docker-desktop/ )
+- Maven ( https://maven.apache.org/download.cgi )
+- Git ( https://git-scm.com/ )
 - A working Gmail app token password ( see below )
 
 ### 🔐 How to Get a Gmail App Password
