@@ -21,6 +21,7 @@ public class SeleniumJobScraper implements JobScraper {
     private static final Logger logger = LoggerFactory.getLogger(SeleniumJobScraper.class);// for demo pu
     private final WebDriver listWebDriver;
     private final WebDriver detailWebDriver;
+    private static final Random RANDOM = new Random();
 
     private String initUrl;
     private boolean hasNextPage = true;
@@ -47,8 +48,8 @@ public class SeleniumJobScraper implements JobScraper {
                 "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/113.0.0.0 Safari/537.36",
                 "Mozilla/5.0 (iPhone; CPU iPhone OS 16_3 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.0 Mobile/15E148 Safari/604.1"
         );
-        Random rand = new Random();
-        String randomUserAgent = userAgents.get(rand.nextInt(userAgents.size()));
+
+        String randomUserAgent = userAgents.get(RANDOM.nextInt(userAgents.size()));
         options.addArguments("user-agent="+randomUserAgent);
 
         // ✅ Disguise automation

@@ -1,5 +1,6 @@
 package site.raylambytes.aijobmatcher.jpa;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import jakarta.persistence.*;
 
 import java.time.LocalDateTime;
@@ -43,10 +44,12 @@ public class MatchingResult {
         this.id = id;
     }
 
+    @SuppressFBWarnings("EI_EXPOSE_REP")
     public JobPosting getJobPosting() {
         return jobPosting;
     }
 
+    @SuppressFBWarnings("EI_EXPOSE_REP2")
     public void setJobPosting(JobPosting jobPosting) {
         this.jobPosting = jobPosting;
     }

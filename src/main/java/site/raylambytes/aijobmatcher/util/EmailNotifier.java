@@ -30,11 +30,7 @@ public class EmailNotifier {
         props.put("mail.smtp.host", "smtp.gmail.com");
         props.put("mail.smtp.port", "587");
 
-        Session session = Session.getInstance(props, new Authenticator() {
-            protected PasswordAuthentication getPasswordAuthentication() {
-                return new PasswordAuthentication(from, password);
-            }
-        });
+        Session session = Session.getInstance(props,new SMTPAuthenticator(from, password));
 
         try {
             Message message = new MimeMessage(session);
@@ -51,6 +47,21 @@ public class EmailNotifier {
         } catch (MessagingException e) {
             logger.error("Error sending email: ", e);
             throw new RuntimeException("❌ Failed to send email: " + e.getMessage(), e);
+        }
+    }
+
+    static class SMTPAuthenticator extends Authenticator {
+        private final String user;
+        private final String pass;
+
+        SMTPAuthenticator(String user, String pass) {
+            this.user = user;
+            this.pass = pass;
+        }
+
+        @Override
+        protected PasswordAuthentication getPasswordAuthentication() {
+            return new PasswordAuthentication(user, pass);
         }
     }
 }
