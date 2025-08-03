@@ -33,10 +33,10 @@ jobs:
         run: mvn clean install
 
       - name: Run SpotBugs
-        run: mvn com.github.spotbugs:spotbugs-maven-plugin:spotbugs
+        run: mvn verify
 
-      - name: Upload SpotBugs Report
+      - name: Upload SpotBugs HTML Report
         uses: actions/upload-artifact@v4
         with:
           name: spotbugs-report
-          path: target/spotbugs/spotbugsXml.xml
+          path: target/site/spotbugs.html
