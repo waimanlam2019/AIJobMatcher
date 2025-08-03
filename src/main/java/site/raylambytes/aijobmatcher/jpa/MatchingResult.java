@@ -12,9 +12,11 @@ public class MatchingResult {
     private Integer id;
 
     // Establish proper foreign key to JobPosting
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "job_posting_id", nullable = false)
     private JobPosting jobPosting;
+
+    private String jobId;
 
     @Column(name = "ai_model", nullable = false)
     private String aiModel;
@@ -48,6 +50,10 @@ public class MatchingResult {
     public void setJobPosting(JobPosting jobPosting) {
         this.jobPosting = jobPosting;
     }
+
+    public String getJobId() {return jobId;}
+
+    public void setJobId(String jobId) {this.jobId = jobId;}
 
     public String getAiModel() {
         return aiModel;

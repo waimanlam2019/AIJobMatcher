@@ -9,4 +9,5 @@ import java.util.Optional;
 public interface MatchingResultRepository extends JpaRepository<MatchingResult, Integer> {
 
     Optional<MatchingResult> findByJobPostingAndAiModel(JobPosting jobPosting, String aiModel);
+    Optional<MatchingResult> findByJobId(String jobId);
 }

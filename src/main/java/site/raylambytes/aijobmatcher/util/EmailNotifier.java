@@ -49,6 +49,7 @@ public class EmailNotifier {
             Transport.send(message);
             logger.info("✅ Email sent successfully");
         } catch (MessagingException e) {
+            logger.error("Error sending email: ", e);
             throw new RuntimeException("❌ Failed to send email: " + e.getMessage(), e);
         }
     }

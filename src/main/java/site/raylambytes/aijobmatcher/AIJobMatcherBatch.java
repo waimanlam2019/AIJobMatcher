@@ -4,12 +4,16 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.context.ConfigurableApplicationContext;
 
 @SpringBootApplication
 public class AIJobMatcherBatch implements CommandLineRunner {
 
     @Autowired
     private AIJobMatcherService aiJobMatcherService;
+
+    @Autowired
+    private ConfigurableApplicationContext context;
 
     public static void main(String[] args) {
         SpringApplication.run(AIJobMatcherBatch.class, args);
@@ -18,5 +22,6 @@ public class AIJobMatcherBatch implements CommandLineRunner {
     @Override
     public void run(String... args) {
         aiJobMatcherService.runMatching();
+        SpringApplication.exit(context, () -> 0);
     }
 }

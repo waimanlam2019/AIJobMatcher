@@ -22,11 +22,14 @@ public class SeleniumJobScraper implements JobScraper {
     private final WebDriver listWebDriver;
     private final WebDriver detailWebDriver;
 
-    private final String initUrl;
+    private String initUrl;
+    private boolean hasNextPage = true;
+    private int currentPage = 1;
+    private int maxPages = 3;
 
     public SeleniumJobScraper(AppConfig appConfig) {
         this.initUrl = appConfig.getInitUrl();
-
+        this.maxPages = Integer.parseInt(appConfig.getMaxPages());
         WebDriverManager.chromedriver().setup();
 
         // Headless Chrome options
@@ -63,6 +66,22 @@ public class SeleniumJobScraper implements JobScraper {
                 "Object.defineProperty(navigator, 'webdriver', {get: () => undefined})");
 
 
+    }
+
+    public String getInitUrl() {
+        return initUrl;
+    }
+
+    public void setInitUrl(String initUrl) {
+        this.initUrl = initUrl;
+    }
+
+    public boolean hasNextPage() {
+        return hasNextPage;
+    }
+
+    public void setHasNextPage(boolean hasNextPage) {
+        this.hasNextPage = hasNextPage;
     }
 
     //Left search result panel from jobsdb
@@ -164,4 +183,40 @@ public class SeleniumJobScraper implements JobScraper {
             return Optional.empty();
         }
     }
+
+    @Override
+    public void findNextPage(){
+        if ( currentPage > this.maxPages ){
+            logger.info("Max page page reached. Stop scraping.");
+            this.setHasNextPage(false);
+            return;
+        }
+
+        // Find the "Next" button link using a reliable selector
+        logger.info("Finding next page link...");
+        Optional<WebElement> nextLink = tryFindOptionalElement(listWebDriver, By.cssSelector("a[data-automation='page-2']"));
+
+
+        if (nextLink.isPresent()){
+            logger.info("Found next page link.");
+            // Extract the href attribute
+            String relativeUrl = nextLink.get().getAttribute("href");
+
+            // If it's a relative URL, convert to absolute
+            String absoluteUrl = relativeUrl;
+            if (!relativeUrl.startsWith("http")) {
+                absoluteUrl = "https://hk.jobsdb.com" + relativeUrl;
+            }
+
+            logger.info("Url of next page: {}", absoluteUrl);
+            this.setInitUrl(absoluteUrl);
+            this.setHasNextPage(true);
+            currentPage++;
+        }else{
+            this.setHasNextPage(false);
+        }
+
+    }
+
+
 }

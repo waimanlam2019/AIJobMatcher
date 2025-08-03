@@ -8,7 +8,9 @@ import org.springframework.stereotype.Component;
 public class AppConfig {
     private String chromeDriverPath;
     private String initUrl;
+    private String maxPages;
     private String maxJobs;
+    private boolean rematch;
     private String aiModel;
     private String aiEndpoint;
     private String aiRoleplay;
@@ -34,6 +36,10 @@ public class AppConfig {
         this.initUrl = initUrl;
     }
 
+    public String getMaxPages() {return maxPages;}
+
+    public void setMaxPages(String maxPages) {this.maxPages = maxPages;}
+
     public String getMaxJobs() {
         return maxJobs;
     }
@@ -41,6 +47,10 @@ public class AppConfig {
     public void setMaxJobs(String maxJobs) {
         this.maxJobs = maxJobs;
     }
+
+    public boolean isRematch() {return rematch;}
+
+    public void setRematch(boolean rematch) {this.rematch = rematch;}
 
     public String getAiModel() {
         return aiModel;

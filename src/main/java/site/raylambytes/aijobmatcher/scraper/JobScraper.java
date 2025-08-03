@@ -9,4 +9,7 @@ public interface JobScraper {
     List<WebElement> scrapeJobCardListing();
     JobPosting digestJobCard(WebElement webElement);
     JobPosting scrapeJobDetails(JobPosting jobPosting);
+    boolean hasNextPage();
+    void findNextPage();
+
 }
