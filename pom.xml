@@ -115,15 +115,14 @@
 				<groupId>com.github.spotbugs</groupId>
 				<artifactId>spotbugs-maven-plugin</artifactId>
 				<version>4.7.3.0</version>
-				<executions>
-					<execution>
-						<phase>verify</phase>
-						<goals>
-							<goal>spotbugs</goal>
-						</goals>
-					</execution>
-				</executions>
+				<configuration>
+					<effort>Max</effort>
+					<threshold>Low</threshold>
+					<xmlOutput>true</xmlOutput> <!-- generate XML -->
+					<outputDirectory>${project.build.directory}/spotbugs</outputDirectory>
+				</configuration>
 			</plugin>
+
 
 			<!-- Compiler plugin: compiles your source -->
 			<plugin>
