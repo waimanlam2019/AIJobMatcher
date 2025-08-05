@@ -22,6 +22,5 @@ public class AIJobMatcherBatch implements CommandLineRunner {
     @Override
     public void run(String... args) {
         aiJobMatcherService.runMatching();
-        SpringApplication.exit(context, () -> 0);
     }
 }

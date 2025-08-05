@@ -19,6 +19,7 @@ services:
       PGADMIN_DEFAULT_PASSWORD: admin
     ports:
       - "8090:80"
+    restart: unless-stopped
   ollama:
     image: ollama/ollama
     container_name: ollama

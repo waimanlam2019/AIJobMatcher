@@ -22,6 +22,17 @@ import java.util.Optional;
 public class AIJobMatcherService {
     private static final Logger logger = LoggerFactory.getLogger(AIJobMatcherService.class);// for demo purposes
 
+    private static final List<String> bannedJobs = List.of(
+            // English
+            "nurse", "therapist", "social worker", "counselor", "doctor",
+            "clinical", "registered nurse", "engineer (licensed)",
+            "certified accountant", "child care", "teacher", "psychologist",
+
+            // Chinese
+            "護士", "註冊護士", "社工", "社會工作者", "治療師", "心理治療師",
+            "醫生", "臨床", "牙醫", "工程師牌", "註冊工程師",
+            "會計師", "註冊會計師", "教師", "老師", "心理學家", "幼兒照顧", "保母"
+            );
     @Autowired
     private AppConfig appConfig;
 
@@ -50,10 +61,21 @@ public class AIJobMatcherService {
             while(jobScraper.hasNextPage() && currentTime.isBefore(oneHourLater)) { //default only scrape 3 pages and hard stop after 1 hour
                 List<WebElement> jobCardList = jobScraper.scrapeJobCardListing();
 
+
                 jobCardList.stream()
                         .limit(Integer.parseInt(appConfig.getMaxJobs()))
                         .forEach(jobCard -> {
                             JobPosting jobPosting = jobScraper.digestJobCard(jobCard);
+
+                            String title = jobPosting.getTitle().toLowerCase();
+                            boolean isBanned = bannedJobs.stream()
+                                    .anyMatch(keyword -> title.contains(keyword.toLowerCase())); // to handle both English & Chinese
+
+                            if (isBanned) {
+                                logger.info("Filtered out unsuitable job: {}", title);
+                                return;
+                            }
+
                             Optional<JobPosting> jobPostingInDb = jobPostingRepository.findByJobId(jobPosting.getJobId());
 
                             if (jobPostingInDb.isEmpty()) {
