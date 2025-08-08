@@ -26,7 +26,7 @@ public class AIJobMatcherService {
             // English
             "nurse", "therapist", "social worker", "counselor", "doctor",
             "clinical", "registered nurse", "engineer (licensed)", "accounting", "accountant", "accounts",
-            "certified accountant", "child care", "teacher", "psychologist", "child", "children", "intern","tutor"
+            "certified accountant", "child care", "teacher", "psychologist", "child", "children", "intern","tutor",
 
             // Chinese
             "護士", "註冊護士", "社工", "社會工作者", "治療師", "心理治療師",
