@@ -26,12 +26,12 @@ public class AIJobMatcherService {
             // English
             "nurse", "therapist", "social worker", "counselor", "doctor",
             "clinical", "registered nurse", "engineer (licensed)",
-            "certified accountant", "child care", "teacher", "psychologist",
+            "certified accountant", "child care", "teacher", "psychologist", "child", "chilren",
 
             // Chinese
             "護士", "註冊護士", "社工", "社會工作者", "治療師", "心理治療師",
             "醫生", "臨床", "牙醫", "工程師牌", "註冊工程師",
-            "會計師", "註冊會計師", "教師", "老師", "心理學家", "幼兒照顧", "保母"
+            "會計師", "註冊會計師", "教師", "老師", "心理學家", "幼兒照顧", "保母", "導師", "補習"
             );
     @Autowired
     private AppConfig appConfig;
