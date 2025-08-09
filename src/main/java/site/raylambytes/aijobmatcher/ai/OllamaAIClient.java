@@ -20,6 +20,7 @@ public class OllamaAIClient implements AIClient {
     private final String aiModel;
     private final HttpClient client;
     private final String endpoint;
+    private Long tokenUsage = 0L;
 
     public OllamaAIClient(AppConfig appConfig) {
         this.aiModel = appConfig.getAiModel();
@@ -53,6 +54,12 @@ public class OllamaAIClient implements AIClient {
     @Override
     public String getAiModel() {
         return aiModel;
+    }
+
+    @Override
+    public Long estimateTokenUsage(String text) {
+        tokenUsage+= text.length()/ 4L;
+        return tokenUsage;
     }
 
     @Override

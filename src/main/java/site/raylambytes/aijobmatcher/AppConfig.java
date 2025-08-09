@@ -11,7 +11,7 @@ public class AppConfig {
     private String chromeDriverPath;
     private String initUrl;
     private String maxPages;
-    private String maxJobs;
+    private String maxJobsPerPage;
     private boolean rematch;
     private String aiModel;
     private String aiEndpoint;
@@ -42,12 +42,10 @@ public class AppConfig {
 
     public void setMaxPages(String maxPages) {this.maxPages = maxPages;}
 
-    public String getMaxJobs() {
-        return maxJobs;
-    }
+    public String getMaxJobsPerPage() {return maxJobsPerPage;}
 
-    public void setMaxJobs(String maxJobs) {
-        this.maxJobs = maxJobs;
+    public void setMaxJobsPerPage(String maxJobsPerPage) {
+        this.maxJobsPerPage = maxJobsPerPage;
     }
 
     public boolean isRematch() {return rematch;}
@@ -123,7 +121,7 @@ public class AppConfig {
         return "AppConfig{" +
                 "chromeDriverPath='" + chromeDriverPath + '\'' +
                 ", initUrl='" + initUrl + '\'' +
-                ", maxJobs='" + maxJobs + '\'' +
+                ", maxJobsPerPage='" + maxJobsPerPage + '\'' +
                 ", aiModel='" + aiModel + '\'' +
                 ", aiEndpoint='" + aiEndpoint + '\'' +
                 ", aiRoleplay='" + aiRoleplay + '\'' +

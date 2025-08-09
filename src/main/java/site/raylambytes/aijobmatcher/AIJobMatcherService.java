@@ -26,7 +26,7 @@ public class AIJobMatcherService {
             // English
             "nurse", "therapist", "social worker", "counselor", "doctor",
             "clinical", "registered nurse", "engineer (licensed)", "accounting", "accountant", "accounts",
-            "certified accountant", "child care", "teacher", "psychologist", "child", "children", "intern","tutor",
+            "certified accountant", "child care", "teacher", "lecturer", "psychologist", "child", "children", "intern","tutor",
 
             // Chinese
             "護士", "註冊護士", "社工", "社會工作者", "治療師", "心理治療師",
@@ -54,19 +54,18 @@ public class AIJobMatcherService {
 
     public void runMatching() {
         // Logic for matching jobs with AI
-        LocalDateTime oneHourLater = LocalDateTime.now().plusHours(1);
+        LocalDateTime jobHardTimeLimit = LocalDateTime.now().plusHours(1);//Force stop if the job runs longer than 1 hour
         LocalDateTime currentTime = LocalDateTime.now();
 
         try {
             // Find all job cards by their attribute
-            while(jobScraper.hasNextPage() && currentTime.isBefore(oneHourLater)) { //default only scrape 3 pages and hard stop after 1 hour
+            while(jobScraper.hasNextPage() && currentTime.isBefore(jobHardTimeLimit)) { //default only scrape 3 pages and hard stop after 1 hour
                 List<WebElement> jobCardList = jobScraper.scrapeJobCardListing();
 
-
                 jobCardList.stream()
-                        .limit(Integer.parseInt(appConfig.getMaxJobs()))
-                        .forEach(jobCard -> {
-                            JobPosting jobPosting = jobScraper.digestJobCard(jobCard);
+                        .limit(Integer.parseInt(appConfig.getMaxJobsPerPage())) //Can limit the program to process less job to speed up testing next page logic
+                        .forEach(jobCardWebElement -> {
+                            JobPosting jobPosting = jobScraper.digestJobCard(jobCardWebElement);
 
                             String title = jobPosting.getTitle().toLowerCase();
                             boolean isBanned = bannedJobs.stream()
@@ -94,11 +93,16 @@ public class AIJobMatcherService {
                                 String aiTask = appConfig.getAiTask();
                                 PromptBuilder promptBuilder = new PromptBuilder(aiRoleplay, candidateProfile, jobPosting.getDescription(), aiTask);
                                 String prompt = promptBuilder.buildPrompt();
+
                                 logger.info("Prompt: {}", prompt);
+                                logger.info("Token usage estimate: {}", aiClient.estimateTokenUsage(prompt));
+
                                 String suggestion = aiClient.query(prompt);
 
                                 // Print it nicely
                                 logger.info("Ollama Suggestion:\n{}", suggestion.trim());
+                                logger.info("Token usage estimate: {}", aiClient.estimateTokenUsage(suggestion));
+
 
                                 boolean shortlistFlag = ResponseAnalyzer.isJobGoodToApply(suggestion);
                                 MatchingResult matchingResult = new MatchingResult();
@@ -120,13 +124,14 @@ public class AIJobMatcherService {
 
                                 if (shortlistFlag) {
                                     String subject = "💼 New Job Match Found!" + jobPosting.getTitle() + " at " + jobPosting.getCompany();
-                                    String body = "Title: " + jobPosting.getTitle() + "<br/>" + "Company: " + jobPosting.getCompany() + "<br/>" + jobPosting.getUrl() + "<br/><br/>You might be a good fit for this job:<br/>";
-                                    String jobDescriptionStyle = "<div style=\"border: 2px solid #333333; padding: 15px; border-radius: 6px; margin-bottom: 20px;\">";
-                                    body += jobDescriptionStyle + jobPosting.getDescriptionHtml();
-                                    String aiSuggestionStyle = "<div style=\"background-color: #f0f4f8; border-left: 4px solid #3b82f6; padding: 15px; margin-top: 20px; font-family: monospace; white-space: pre-wrap;line-height: 1.5;\">";
-                                    body += "</div><br/>AI says<br/>" + aiSuggestionStyle + "<pre>" + suggestion.trim() + "</pre></div>";
+                                    String jobDescriptionStyle = "style=\"border: 2px solid #333333; padding: 15px; border-radius: 6px; margin-bottom: 20px;\">";
+                                    String aiSuggestionStyle = "style=\"background-color: #f0f4f8; border-left: 4px solid #3b82f6; padding: 15px; margin-top: 20px; font-family: monospace; white-space: pre-wrap;line-height: 1.5;\">";
+                                    String emailBody = "Title: " + jobPosting.getTitle() + "<br/>" +
+                                            "Company: " + jobPosting.getCompany() + "<br/>" +
+                                            jobPosting.getUrl() + "<br/><br/>You might be a good fit for this job:<br/>" +
+                                            "<div "+jobDescriptionStyle + jobPosting.getDescriptionHtml() +"</div><br/>"
+                                    +"AI says:<br/><div " + aiSuggestionStyle + "<pre>" + suggestion.trim() + "</pre></div>";
 
-                                    final String emailBody = body;
                                     RetryUtils.retryVoid(3, 3000, () -> {
                                         emailNotifier.sendEmail(subject, emailBody);
                                     });
