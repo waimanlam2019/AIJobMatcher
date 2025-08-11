@@ -31,7 +31,7 @@ public class AIJobMatcherService {
             // Chinese //TODO this config is not in .properties because .properties is not UTF-8 encoded and does not support Chinese characters
             "護士", "註冊護士", "社工", "社會工作者", "治療師", "心理治療師",
             "醫生", "臨床", "牙醫", "工程師牌", "註冊工程師", "會計",
-            "會計師", "註冊會計師", "教師", "老師", "心理學家", "幼兒照顧",
+            "會計師", "註冊會計師", "教師", "教學", "老師", "心理學家", "幼兒照顧",
             "保母", "導師", "補習", "司機", "鏟車", "治療", "實習", "实习生", "護 士", "舞台"
             );
     @Autowired
