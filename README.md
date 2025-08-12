@@ -1,5 +1,3 @@
-( Update in progress )
-
 # AI Job Matcher 🚀
 
 A full-stack Spring Boot + React web app that scrapes jobs from a job portal, uses an AI model to evaluate their relevance to your profile. Currently it could send an email to yourself letting you know which job is suitable for you.
@@ -22,9 +20,10 @@ This project automates the job search process with a bit of intelligence:
 - **Ollama** – Local LLM for job relevance evaluation
 - **REST API** – For frontend integration
 
-## Frontend ( Work in progress )
+## Frontend ( https://github.com/waimanlam2019/simple-job-matching-ui )
 - **React**
 - Basic table UI with optional filters (e.g., Full-time / Part-time)
+- In local environment, this app would expect an api on http://localhost:8080/api/matchingresults , which is provided by this java repo
 
 ## DevOps / Infra (Planned)
 - Dockerizing backend
@@ -89,30 +88,12 @@ Recommended if you plan to scrape dozens or hundreds of jobs, run larger AI mode
 # 📦 How to Run
 
 ## Software Requirement
-- Docker Desktop ( https://www.docker.com/products/docker-desktop/ )
+- Nodejs for the Frontend
+- Java/Intellij for the backend
+- Ollama ( https://ollama.com/ ) with your desired AI Model such as LLaMa3:8B or mistral
+- optional Docker Desktop ( https://www.docker.com/products/docker-desktop/ )
 - Maven ( https://maven.apache.org/download.cgi )
 - Git ( https://git-scm.com/ )
-- A working Gmail app token password ( see below )
-
-### 🔐 How to Get a Gmail App Password
-
-If you're using Gmail with an app (like a Java or Python program) and **2-Step Verification** is enabled, you'll need to generate an **App Password**.
-
-1. Go to [Google Account Security Settings](https://myaccount.google.com/security).
-2. Under **"Signing in to Google"**, ensure that:
-   - **2-Step Verification** is turned **ON**.
-3. After enabling 2FA, a new option **"App passwords"** will appear below.
-4. Click on **App passwords**.
-5. Sign in again if prompted.
-6. Under **Select app**, choose `Mail`.
-7. Under **Select device**, choose `Other (Custom name)` and name it (e.g., `Java App`).
-8. Click **Generate**.
-9. Google will show a **16-character password**.
-10. **Copy this password** — this is your app-specific token.
-11. Use this generated password in your app instead of your regular Gmail password.
-
-> 💡 **Important:** Keep this token secure. You won't need to remember it — just store it safely in your app config or secrets manager.
-
 
 ## ⚙️ Possible Configuration in `application-docker.properties`
 
@@ -136,13 +117,15 @@ Below are the essential configuration properties used to run the AI Job Matcher 
 - `app.emailTo` – Recipient address for job matching results.
 
 ## 1. Backend (Spring Boot)
-```bash
-1. Git clone this backend repository
-2. With a terminal like bash or powershell, change directory into it
-3. Configure your own setting with application-template-docker.properties ( Mandatory: app.emailFrom, app.emailPassword, app.emailTo Optional: app.aiRoleplay , app.candidateProfile)
-4. In src/main/resources, rename application-template-docker.properties to application-docker.properties
-4. Package the program by command "mvn clean package"
-5. run command "docker compose up"
-6. Give it some time, docker will load ollama and mistral AI model, postgresql database and run the a batch job which will match the candidate profile with jobs from the init url
 
+1. Git clone this backend repository
+2. Open the project with Intellij 
+3. Configure your own setting with application-template-docker.properties ( Mandatory: app.emailFrom, app.emailPassword, app.emailTo Optional: app.aiRoleplay , app.candidateProfile)
+4. In src/main/resources, rename application-template-docker.properties to application.properties
+5. Run AIJobMatcherAPI.java
+
+## 2. Frontend (ReactJS)
+1. Git clone https://github.com/waimanlam2019/simple-job-matching-ui
+2. npm install
+3. npm run dev
 
