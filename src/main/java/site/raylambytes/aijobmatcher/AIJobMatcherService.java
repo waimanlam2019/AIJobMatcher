@@ -120,22 +120,6 @@ public class AIJobMatcherService {
                                             matchingResultRepository.save(matchingResult);
                                             logger.info("Saving new matching result for job: {}", matchingResult.getJobPosting().getJobId());
                                         });
-
-
-                                if (shortlistFlag) {
-                                    String subject = "💼 New Job Match Found!" + jobPosting.getTitle() + " at " + jobPosting.getCompany();
-                                    String jobDescriptionStyle = "style=\"border: 2px solid #333333; padding: 15px; border-radius: 6px; margin-bottom: 20px;\">";
-                                    String aiSuggestionStyle = "style=\"background-color: #f0f4f8; border-left: 4px solid #3b82f6; padding: 15px; margin-top: 20px; font-family: monospace; white-space: pre-wrap;line-height: 1.5;\">";
-                                    String emailBody = "Title: " + jobPosting.getTitle() + "<br/>" +
-                                            "Company: " + jobPosting.getCompany() + "<br/>" +
-                                            jobPosting.getUrl() + "<br/><br/>You might be a good fit for this job:<br/>" +
-                                            "<div "+jobDescriptionStyle + jobPosting.getDescriptionHtml() +"</div><br/>"
-                                    +"AI says:<br/><div " + aiSuggestionStyle + "<pre>" + suggestion.trim() + "</pre></div>";
-
-                                    RetryUtils.retryVoid(3, 3000, () -> {
-                                        emailNotifier.sendEmail(subject, emailBody);
-                                    });
-                                }
                             }else{
                                 logger.info("Skip matching because matching result already exists for job: {}", jobPosting.getJobId());
                             }

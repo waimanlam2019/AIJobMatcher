@@ -19,7 +19,8 @@ public interface JobPostingRepository extends JpaRepository<JobPosting, Integer>
     @Query("SELECT new site.raylambytes.aijobmatcher.jpa.JobMatchingResultDTO(" +
             "j.title, j.company, j.location, j.jobType, j.description, j.url, " +
             "m.aiModel, m.verdict, m.shortlistFlag, m.createdAt) " +
-            "FROM JobPosting j JOIN MatchingResult m ON j.id = m.jobPosting.id")
+            "FROM JobPosting j JOIN MatchingResult m ON j.id = m.jobPosting.id " +
+    "ORDER BY m.createdAt DESC")
     List<JobMatchingResultDTO> findAllWithMatchingResults();
 
 
