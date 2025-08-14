@@ -12,24 +12,25 @@ import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.util.List;
 
 @Service
 public class OllamaAIClient implements AIClient {
     private static final Logger logger = LoggerFactory.getLogger(OllamaAIClient.class);
 
-    private final String aiModel;
+    private final List<String> aiModels;
     private final HttpClient client;
     private final String endpoint;
     private Long tokenUsage = 0L;
 
     public OllamaAIClient(AppConfig appConfig) {
-        this.aiModel = appConfig.getAiModel();
+        this.aiModels = appConfig.getAiModels();
         this.client = HttpClient.newHttpClient();
         this.endpoint = appConfig.getAiEndpoint();
     }
 
     @Override
-    public String query(String prompt) {
+    public String query(String prompt, String aiModel) {
         String jsonPayload = "{\"model\":\"" + aiModel + "\", \"prompt\":\"" + prompt + "\"}";
 
         HttpRequest request = HttpRequest.newBuilder()
@@ -52,20 +53,20 @@ public class OllamaAIClient implements AIClient {
     }
 
     @Override
-    public String getAiModel() {
-        return aiModel;
-    }
-
-    @Override
     public Long estimateTokenUsage(String text) {
         tokenUsage+= text.length()/ 4L;
         return tokenUsage;
     }
 
     @Override
+    public List<String> getAiModels() {
+        return aiModels;
+    }
+
+    @Override
     public String toString() {
         return "OllamaAIClient{" +
-                "aiModel='" + aiModel + '\'' +
+                "aiModels='" + aiModels + '\'' +
                 ", client=" + client +
                 ", endpoint='" + endpoint + '\'' +
                 '}';

@@ -20,7 +20,7 @@ public interface JobPostingRepository extends JpaRepository<JobPosting, Integer>
             "j.title, j.company, j.location, j.jobType, j.description, j.url, " +
             "m.aiModel, m.verdict, m.shortlistFlag, m.createdAt) " +
             "FROM JobPosting j JOIN MatchingResult m ON j.id = m.jobPosting.id " +
-    "ORDER BY m.createdAt DESC")
+    "ORDER BY j.id DESC")
     List<JobMatchingResultDTO> findAllWithMatchingResults();
 
 

@@ -86,45 +86,47 @@ public class AIJobMatcherService {
                                 logger.info("Job already exists in the database: {}", jobPosting.getJobId());
                             }
 
-                            Optional<MatchingResult> matchingResultInDb = matchingResultRepository.findByJobPostingAndAiModel(jobPosting, aiClient.getAiModel());
-                            if ( matchingResultInDb.isEmpty() || appConfig.isRematch() ){
-                                String aiRoleplay = appConfig.getAiRoleplay();
-                                String candidateProfile = appConfig.getCandidateProfile();
-                                String aiTask = appConfig.getAiTask();
-                                PromptBuilder promptBuilder = new PromptBuilder(aiRoleplay, candidateProfile, jobPosting.getDescription(), aiTask);
-                                String prompt = promptBuilder.buildPrompt();
+                            for ( String aiModel: aiClient.getAiModels() ) {
+                                logger.info("Working with ai model: {}", aiModel);
+                                Optional<MatchingResult> matchingResultInDb = matchingResultRepository.findByJobPostingAndAiModel(jobPosting, aiModel);
+                                if (matchingResultInDb.isEmpty() || appConfig.isRematch()) {
+                                    String aiRoleplay = appConfig.getAiRoleplay();
+                                    String candidateProfile = appConfig.getCandidateProfile();
+                                    String aiTask = appConfig.getAiTask();
+                                    PromptBuilder promptBuilder = new PromptBuilder(aiRoleplay, candidateProfile, jobPosting.getDescription(), aiTask);
+                                    String prompt = promptBuilder.buildPrompt();
 
-                                logger.info("Prompt: {}", prompt);
-                                logger.info("Token usage estimate: {}", aiClient.estimateTokenUsage(prompt));
+                                    logger.info("Prompt: {}", prompt);
+                                    logger.info("Token usage estimate: {}", aiClient.estimateTokenUsage(prompt));
 
-                                String suggestion = aiClient.query(prompt);
+                                    String suggestion = aiClient.query(prompt, aiModel);
 
-                                // Print it nicely
-                                logger.info("Ollama Suggestion:\n{}", suggestion.trim());
-                                logger.info("Token usage estimate: {}", aiClient.estimateTokenUsage(suggestion));
+                                    // Print it nicely
+                                    logger.info("Ollama Suggestion:\n{}", suggestion.trim());
+                                    logger.info("Token usage estimate: {}", aiClient.estimateTokenUsage(suggestion));
 
 
-                                boolean shortlistFlag = ResponseAnalyzer.isJobGoodToApply(suggestion);
-                                MatchingResult matchingResult = new MatchingResult();
-                                matchingResult.setJobPosting(jobPosting);
-                                matchingResult.setJobId(jobPosting.getJobId());
-                                matchingResult.setAiModel(aiClient.getAiModel());
-                                matchingResult.setVerdict(suggestion);
-                                matchingResult.setShortlistFlag(shortlistFlag);
-                                matchingResultInDb.ifPresentOrElse(existingResult -> {
-                                            existingResult.setVerdict(suggestion);
-                                            existingResult.setShortlistFlag(shortlistFlag);
-                                            matchingResultRepository.save(existingResult);
-                                            logger.info("Updated existing matching result for job: {}", existingResult.getJobPosting().getJobId());
-                                            }, () -> {
-                                            matchingResultRepository.save(matchingResult);
-                                            logger.info("Saving new matching result for job: {}", matchingResult.getJobPosting().getJobId());
-                                        });
-                            }else{
-                                logger.info("Skip matching because matching result already exists for job: {}", jobPosting.getJobId());
+                                    boolean shortlistFlag = ResponseAnalyzer.isJobGoodToApply(suggestion);
+                                    MatchingResult matchingResult = new MatchingResult();
+                                    matchingResult.setJobPosting(jobPosting);
+                                    matchingResult.setJobId(jobPosting.getJobId());
+                                    matchingResult.setAiModel(aiModel);
+                                    matchingResult.setVerdict(suggestion);
+                                    matchingResult.setShortlistFlag(shortlistFlag);
+                                    matchingResultInDb.ifPresentOrElse(existingResult -> {
+                                        existingResult.setVerdict(suggestion);
+                                        existingResult.setShortlistFlag(shortlistFlag);
+                                        matchingResultRepository.save(existingResult);
+                                        logger.info("Updated existing matching result for job: {}", existingResult.getJobPosting().getJobId());
+                                    }, () -> {
+                                        matchingResultRepository.save(matchingResult);
+                                        logger.info("Saving new matching result for job: {}", matchingResult.getJobPosting().getJobId());
+                                    });
+                                } else {
+                                    logger.info("Skip matching because matching result already exists for job: {}", jobPosting.getJobId());
+                                }
+
                             }
-
-
                         });
                 jobScraper.findNextPage();
             }

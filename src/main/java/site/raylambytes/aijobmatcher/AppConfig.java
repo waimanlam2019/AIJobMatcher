@@ -13,7 +13,7 @@ public class AppConfig {
     private String maxPages;
     private String maxJobsPerPage;
     private boolean rematch;
-    private String aiModel;
+    private List<String> aiModels;
     private String aiEndpoint;
     private String aiRoleplay;
     private String aiTask;
@@ -52,12 +52,12 @@ public class AppConfig {
 
     public void setRematch(boolean rematch) {this.rematch = rematch;}
 
-    public String getAiModel() {
-        return aiModel;
+    public List<String> getAiModels() {
+        return aiModels;
     }
 
-    public void setAiModel(String aiModel) {
-        this.aiModel = aiModel;
+    public void setAiModels(List<String> aiModels) {
+        this.aiModels = aiModels;
     }
 
     public String getAiEndpoint() {
@@ -122,7 +122,7 @@ public class AppConfig {
                 "chromeDriverPath='" + chromeDriverPath + '\'' +
                 ", initUrl='" + initUrl + '\'' +
                 ", maxJobsPerPage='" + maxJobsPerPage + '\'' +
-                ", aiModel='" + aiModel + '\'' +
+                ", aiModels='" + aiModels + '\'' +
                 ", aiEndpoint='" + aiEndpoint + '\'' +
                 ", aiRoleplay='" + aiRoleplay + '\'' +
                 ", aiTask='" + aiTask + '\'' +
