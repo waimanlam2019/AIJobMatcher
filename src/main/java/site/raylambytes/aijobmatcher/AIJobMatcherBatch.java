@@ -15,12 +15,20 @@ public class AIJobMatcherBatch implements CommandLineRunner {
     @Autowired
     private ConfigurableApplicationContext context;
 
+    @Autowired
+    private AppConfig appConfig;
+
     public static void main(String[] args) {
         SpringApplication.run(AIJobMatcherBatch.class, args);
     }
 
     @Override
     public void run(String... args) {
-        aiJobMatcherService.runMatching();
+        if (appConfig.isOfflineMode()){
+            aiJobMatcherService.runMatchingOffline();
+        }else{
+            aiJobMatcherService.runMatching();
+        }
+
     }
 }

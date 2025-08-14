@@ -52,6 +52,18 @@ public class AIJobMatcherService {
     @Autowired
     private MatchingResultRepository matchingResultRepository;
 
+    public void runMatchingOffline(){
+        // Logic for offline matching, e.g., reading from a file or database
+        // This is a placeholder for the actual implementation
+        logger.info("Running offline matching...");
+        List<JobPosting> jobPostings = jobPostingRepository.findAllByOrderByIdDesc();
+        for (JobPosting jobPosting : jobPostings) {
+            if (isBannedJob(jobPosting)) continue;
+            logger.info("Processing job: {}", jobPosting.getTitle());
+            doMatchingByAIs(jobPosting);
+        }
+    }
+    
     public void runMatching() {
         // Logic for matching jobs with AI
         LocalDateTime jobHardTimeLimit = LocalDateTime.now().plusHours(1);//Force stop if the job runs longer than 1 hour
@@ -67,14 +79,7 @@ public class AIJobMatcherService {
                         .forEach(jobCardWebElement -> {
                             JobPosting jobPosting = jobScraper.digestJobCard(jobCardWebElement);
 
-                            String title = jobPosting.getTitle().toLowerCase();
-                            boolean isBanned = bannedJobs.stream()
-                                    .anyMatch(keyword -> title.contains(keyword.toLowerCase())); // to handle both English & Chinese
-
-                            if (isBanned) {
-                                logger.info("Filtered out unsuitable job: {}", title);
-                                return;
-                            }
+                            if (isBannedJob(jobPosting)) return;
 
                             Optional<JobPosting> jobPostingInDb = jobPostingRepository.findByJobId(jobPosting.getJobId());
 
@@ -86,47 +91,7 @@ public class AIJobMatcherService {
                                 logger.info("Job already exists in the database: {}", jobPosting.getJobId());
                             }
 
-                            for ( String aiModel: aiClient.getAiModels() ) {
-                                logger.info("Working with ai model: {}", aiModel);
-                                Optional<MatchingResult> matchingResultInDb = matchingResultRepository.findByJobPostingAndAiModel(jobPosting, aiModel);
-                                if (matchingResultInDb.isEmpty() || appConfig.isRematch()) {
-                                    String aiRoleplay = appConfig.getAiRoleplay();
-                                    String candidateProfile = appConfig.getCandidateProfile();
-                                    String aiTask = appConfig.getAiTask();
-                                    PromptBuilder promptBuilder = new PromptBuilder(aiRoleplay, candidateProfile, jobPosting.getDescription(), aiTask);
-                                    String prompt = promptBuilder.buildPrompt();
-
-                                    logger.info("Prompt: {}", prompt);
-                                    logger.info("Token usage estimate: {}", aiClient.estimateTokenUsage(prompt));
-
-                                    String suggestion = aiClient.query(prompt, aiModel);
-
-                                    // Print it nicely
-                                    logger.info("Ollama Suggestion:\n{}", suggestion.trim());
-                                    logger.info("Token usage estimate: {}", aiClient.estimateTokenUsage(suggestion));
-
-
-                                    boolean shortlistFlag = ResponseAnalyzer.isJobGoodToApply(suggestion);
-                                    MatchingResult matchingResult = new MatchingResult();
-                                    matchingResult.setJobPosting(jobPosting);
-                                    matchingResult.setJobId(jobPosting.getJobId());
-                                    matchingResult.setAiModel(aiModel);
-                                    matchingResult.setVerdict(suggestion);
-                                    matchingResult.setShortlistFlag(shortlistFlag);
-                                    matchingResultInDb.ifPresentOrElse(existingResult -> {
-                                        existingResult.setVerdict(suggestion);
-                                        existingResult.setShortlistFlag(shortlistFlag);
-                                        matchingResultRepository.save(existingResult);
-                                        logger.info("Updated existing matching result for job: {}", existingResult.getJobPosting().getJobId());
-                                    }, () -> {
-                                        matchingResultRepository.save(matchingResult);
-                                        logger.info("Saving new matching result for job: {}", matchingResult.getJobPosting().getJobId());
-                                    });
-                                } else {
-                                    logger.info("Skip matching because matching result already exists for job: {}", jobPosting.getJobId());
-                                }
-
-                            }
+                            doMatchingByAIs(jobPosting);
                         });
                 jobScraper.findNextPage();
             }
@@ -134,6 +99,63 @@ public class AIJobMatcherService {
             logger.error("An expected error occurred during scraping: ", e);
         }
     }
+
+    private void doMatchingByAIs(JobPosting jobPosting) {
+        for ( String aiModel: aiClient.getAiModels() ) {
+            logger.info("Working with ai model: {}", aiModel);
+            Optional<MatchingResult> matchingResultInDb = matchingResultRepository.findByJobPostingAndAiModel(jobPosting, aiModel);
+            if (matchingResultInDb.isEmpty() || appConfig.isRematch()) {
+                String aiRoleplay = appConfig.getAiRoleplay();
+                String candidateProfile = appConfig.getCandidateProfile();
+                String aiTask = appConfig.getAiTask();
+                PromptBuilder promptBuilder = new PromptBuilder(aiRoleplay, candidateProfile, jobPosting.getDescription(), aiTask);
+                String prompt = promptBuilder.buildPrompt();
+
+                logger.info("Prompt: {}", prompt);
+                logger.info("Token usage estimate: {}", aiClient.estimateTokenUsage(prompt));
+
+                String suggestion = aiClient.query(prompt, aiModel);
+
+                // Print it nicely
+                logger.info("Ollama Suggestion:\n{}", suggestion.trim());
+                logger.info("Token usage estimate: {}", aiClient.estimateTokenUsage(suggestion));
+
+
+                boolean shortlistFlag = ResponseAnalyzer.isJobGoodToApply(suggestion);
+                MatchingResult matchingResult = new MatchingResult();
+                matchingResult.setJobPosting(jobPosting);
+                matchingResult.setJobId(jobPosting.getJobId());
+                matchingResult.setAiModel(aiModel);
+                matchingResult.setVerdict(suggestion);
+                matchingResult.setShortlistFlag(shortlistFlag);
+                matchingResultInDb.ifPresentOrElse(existingResult -> {
+                    existingResult.setVerdict(suggestion);
+                    existingResult.setShortlistFlag(shortlistFlag);
+                    matchingResultRepository.save(existingResult);
+                    logger.info("Updated existing matching result for job: {}", existingResult.getJobPosting().getJobId());
+                }, () -> {
+                    matchingResultRepository.save(matchingResult);
+                    logger.info("Saving new matching result for job: {}", matchingResult.getJobPosting().getJobId());
+                });
+            } else {
+                logger.info("Skip matching because matching result already exists for job: {}", jobPosting.getJobId());
+            }
+
+        }
+    }
+
+    private static boolean isBannedJob(JobPosting jobPosting) {
+        String title = jobPosting.getTitle().toLowerCase();
+        boolean isBanned = bannedJobs.stream()
+                .anyMatch(keyword -> title.contains(keyword.toLowerCase())); // to handle both English & Chinese
+
+        if (isBanned) {
+            logger.info("Filtered out unsuitable job: {}", title);
+            return true;
+        }
+        return false;
+    }
+
     public List<JobMatchingResultDTO> getAllJobMatchingResults() {
         return jobPostingRepository.findAllWithMatchingResults();
     }

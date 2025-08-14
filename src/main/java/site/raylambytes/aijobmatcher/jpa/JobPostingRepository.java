@@ -13,6 +13,8 @@ public interface JobPostingRepository extends JpaRepository<JobPosting, Integer>
     // Custom query method: find by jobId
     Optional<JobPosting> findByJobId(String jobId);
 
+    List<JobPosting> findAllByOrderByIdDesc();
+
     // Optional: delete by jobId
     void deleteByJobId(String jobId);
 

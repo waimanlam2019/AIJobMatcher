@@ -13,6 +13,7 @@ public class AppConfig {
     private String maxPages;
     private String maxJobsPerPage;
     private boolean rematch;
+    private boolean offlineMode;
     private List<String> aiModels;
     private String aiEndpoint;
     private String aiRoleplay;
@@ -51,6 +52,10 @@ public class AppConfig {
     public boolean isRematch() {return rematch;}
 
     public void setRematch(boolean rematch) {this.rematch = rematch;}
+
+    public boolean isOfflineMode() {return offlineMode;}
+
+    public void setOfflineMode(boolean offlineMode) {this.offlineMode = offlineMode;}
 
     public List<String> getAiModels() {
         return aiModels;
