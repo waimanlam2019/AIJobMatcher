@@ -152,7 +152,8 @@ public class SeleniumJobScraper implements JobScraper {
             throw new RuntimeException(e);
         }
         //Full Time or Part Time
-        String jobType = tryFindOptionalElement(detailWebDriver, By.cssSelector("span[data-automation='job-detail-work-type'] a"))
+        String jobType = tryFindOptionalElement(detailWebDriver,
+                By.cssSelector("span[data-automation='job-detail-work-type'], span[data-automation='job-detail-work-type'] a"))
                 .map(WebElement::getText)
                 .orElse("Unknown");
         logger.info("Job Type: {}", jobType);

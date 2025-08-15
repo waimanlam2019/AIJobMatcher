@@ -62,7 +62,7 @@ public class AIJobMatcherService {
         // This is a placeholder for the actual implementation
         logger.info("Running offline matching...");
         logger.info("Active profile: {}", activeProfile);//part-time or default
-            List<JobPosting> jobPostings = activeProfile.equals("default")?jobPostingRepository.findAllByJobTypeInOrderByIdDesc(List.of("Full-Time")):jobPostingRepository.findAllByJobTypeInOrderByIdDesc(Arrays.asList("Part-Time","Contract/Temp","Unknown"));
+            List<JobPosting> jobPostings = activeProfile.equals("default")?jobPostingRepository.findAllByJobTypeInOrderByIdDesc(Arrays.asList("Full-Time", "Contract/Temp")):jobPostingRepository.findAllByJobTypeInOrderByIdDesc(Arrays.asList("Part time","Unknown"));
         for (JobPosting jobPosting : jobPostings) {
             if (isBannedJob(jobPosting)) continue;
             logger.info("Processing job: {}", jobPosting.getTitle());
