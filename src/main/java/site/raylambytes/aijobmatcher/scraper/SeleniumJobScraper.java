@@ -7,6 +7,8 @@ import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.chrome.ChromeOptions;
+import org.openqa.selenium.support.ui.ExpectedConditions;
+import org.openqa.selenium.support.ui.WebDriverWait;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -14,6 +16,7 @@ import site.raylambytes.aijobmatcher.AppConfig;
 import site.raylambytes.aijobmatcher.util.RetryUtils;
 import site.raylambytes.aijobmatcher.jpa.JobPosting;
 
+import java.time.Duration;
 import java.util.*;
 
 @Service
@@ -98,6 +101,9 @@ public class SeleniumJobScraper implements JobScraper {
         } catch (InterruptedException e) {
             throw new RuntimeException(e);
         }
+
+        WebDriverWait wait = new WebDriverWait(listWebDriver, Duration.ofSeconds(10));
+        wait.until(ExpectedConditions.presenceOfAllElementsLocatedBy(By.cssSelector("article[data-card-type=JobCard]")));
         List<WebElement> jobList = listWebDriver.findElements(By.cssSelector("article[data-card-type=JobCard]"));
         logger.info("Found {} job(s) on jobsdb link.", jobList.size());
         if (jobList.isEmpty()) {

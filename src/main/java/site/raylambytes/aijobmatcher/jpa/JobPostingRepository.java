@@ -15,14 +15,27 @@ public interface JobPostingRepository extends JpaRepository<JobPosting, Integer>
 
     List<JobPosting> findAllByOrderByIdDesc();
 
+    List<JobPosting> findAllByJobTypeInOrderByIdDesc(List<String> jobTypes);
+
     // Optional: delete by jobId
     void deleteByJobId(String jobId);
 
-    @Query("SELECT new site.raylambytes.aijobmatcher.jpa.JobMatchingResultDTO(" +
-            "j.title, j.company, j.location, j.jobType, j.description, j.url, " +
-            "m.aiModel, m.verdict, m.shortlistFlag, m.createdAt) " +
-            "FROM JobPosting j JOIN MatchingResult m ON j.id = m.jobPosting.id " +
-    "ORDER BY j.id DESC")
+    @Query("""
+SELECT new site.raylambytes.aijobmatcher.jpa.JobMatchingResultDTO(
+    j.title, j.company, j.location, j.jobType, j.description, j.url,
+    m.aiModel, m.verdict, m.shortlistFlag, m.createdAt
+)
+FROM JobPosting j 
+JOIN MatchingResult m ON j.id = m.jobPosting.id
+WHERE j.id IN (
+    SELECT mr.jobPosting.id
+    FROM MatchingResult mr
+    WHERE mr.shortlistFlag = true
+    GROUP BY mr.jobPosting.id
+    HAVING COUNT(mr.id) >= 4
+)
+ORDER BY j.id DESC, m.aiModel
+""")
     List<JobMatchingResultDTO> findAllWithMatchingResults();
 
 

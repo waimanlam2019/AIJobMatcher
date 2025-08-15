@@ -4,6 +4,7 @@ import org.openqa.selenium.WebElement;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import site.raylambytes.aijobmatcher.ai.AIClient;
 import site.raylambytes.aijobmatcher.jpa.*;
@@ -15,6 +16,7 @@ import site.raylambytes.aijobmatcher.util.RetryUtils;
 
 import javax.swing.text.html.Option;
 import java.time.LocalDateTime;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
@@ -52,16 +54,21 @@ public class AIJobMatcherService {
     @Autowired
     private MatchingResultRepository matchingResultRepository;
 
+    @Value("${spring.profiles.active:default}")
+    private String activeProfile;
+
     public void runMatchingOffline(){
         // Logic for offline matching, e.g., reading from a file or database
         // This is a placeholder for the actual implementation
         logger.info("Running offline matching...");
-        List<JobPosting> jobPostings = jobPostingRepository.findAllByOrderByIdDesc();
+        logger.info("Active profile: {}", activeProfile);//part-time or default
+            List<JobPosting> jobPostings = activeProfile.equals("default")?jobPostingRepository.findAllByJobTypeInOrderByIdDesc(List.of("Full-Time")):jobPostingRepository.findAllByJobTypeInOrderByIdDesc(Arrays.asList("Part-Time","Contract/Temp","Unknown"));
         for (JobPosting jobPosting : jobPostings) {
             if (isBannedJob(jobPosting)) continue;
             logger.info("Processing job: {}", jobPosting.getTitle());
             doMatchingByAIs(jobPosting);
         }
+        logger.info("Matching finished. Total jobs processed: {}", jobPostings.size());
     }
     
     public void runMatching() {
