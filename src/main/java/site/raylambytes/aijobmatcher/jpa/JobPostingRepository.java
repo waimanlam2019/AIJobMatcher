@@ -25,15 +25,8 @@ SELECT new site.raylambytes.aijobmatcher.jpa.JobMatchingResultDTO(
     j.title, j.company, j.location, j.jobType, j.description, j.url,
     m.aiModel, m.verdict, m.shortlistFlag, m.createdAt
 )
-FROM JobPosting j 
+FROM JobPosting j
 JOIN MatchingResult m ON j.id = m.jobPosting.id
-WHERE j.id IN (
-    SELECT mr.jobPosting.id
-    FROM MatchingResult mr
-    WHERE mr.shortlistFlag = true
-    GROUP BY mr.jobPosting.id
-    HAVING COUNT(mr.id) >= 4
-)
 ORDER BY j.id DESC, m.aiModel
 """)
     List<JobMatchingResultDTO> findAllWithMatchingResults();
