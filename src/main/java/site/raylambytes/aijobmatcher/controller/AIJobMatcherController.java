@@ -16,7 +16,7 @@ import java.util.List;
 @RequestMapping("/api")
 @CrossOrigin(origins = { "http://localhost:5173", "http://localhost:3000" })
 public class AIJobMatcherController {
-    private static final Logger logger = LoggerFactory.getLogger(AIJobMatcherController.class);// for demo pu
+    private static final Logger logger = LoggerFactory.getLogger(AIJobMatcherController.class);
 
     @Autowired
     private AIJobMatcherService aiJobMatcherService;
@@ -29,11 +29,19 @@ public class AIJobMatcherController {
     }
 
     // POST /api/jobmatch
-    @PostMapping("/dojobmatching")
+    @PostMapping("/startjobmatching")
     public ResponseEntity<String> doJobMatching() {
         logger.info("Received POST request to start job matching");
         aiJobMatcherService.runMatching();
         logger.info("Job matching process finished successfully");
         return ResponseEntity.ok("Received POST request. You handle it from here, boss.");
+    }
+
+    @PostMapping("/stopjobmatching")
+    public ResponseEntity<String> stop() {
+        logger.info("Received POST request to stop job matching");
+        aiJobMatcherService.stopJobMatching();
+        logger.info("Job matching process stopped");
+        return ResponseEntity.ok("Job matching stopped");
     }
 }

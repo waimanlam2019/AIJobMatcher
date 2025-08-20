@@ -19,10 +19,17 @@ import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 
 @Service
 public class AIJobMatcherService {
     private static final Logger logger = LoggerFactory.getLogger(AIJobMatcherService.class);// for demo purposes
+
+    private Future<?> runningTask;
+    private final ExecutorService executor = Executors.newSingleThreadExecutor();
+
 
     private static final List<String> bannedJobs = List.of(
             // English
@@ -71,44 +78,31 @@ public class AIJobMatcherService {
         logger.info("Matching finished. Total jobs processed: {}", jobPostings.size());
     }
     
-    public void runMatching() {
-        // Logic for matching jobs with AI
-        LocalDateTime jobHardTimeLimit = LocalDateTime.now().plusHours(1);//Force stop if the job runs longer than 1 hour
-        LocalDateTime currentTime = LocalDateTime.now();
-
-        try {
-            // Find all job cards by their attribute
-            while(jobScraper.hasNextPage() && currentTime.isBefore(jobHardTimeLimit)) { //default only scrape 3 pages and hard stop after 1 hour
-                List<WebElement> jobCardList = jobScraper.scrapeJobCardListing();
-
-                jobCardList.stream()
-                        .limit(Integer.parseInt(appConfig.getMaxJobsPerPage())) //Can limit the program to process less job to speed up testing next page logic
-                        .forEach(jobCardWebElement -> {
-                            JobPosting jobPosting = jobScraper.digestJobCard(jobCardWebElement);
-
-                            if (isBannedJob(jobPosting)) return;
-
-                            Optional<JobPosting> jobPostingInDb = jobPostingRepository.findByJobId(jobPosting.getJobId());
-
-                            if (jobPostingInDb.isEmpty()) {
-                                jobPosting = jobScraper.scrapeJobDetails(jobPosting);
-                                jobPostingRepository.save(jobPosting);
-                            } else {
-                                jobPosting = jobPostingInDb.get();
-                                logger.info("Job already exists in the database: {}", jobPosting.getJobId());
-                            }
-
-                            doMatchingByAIs(jobPosting);
-                        });
-                jobScraper.findNextPage();
-            }
-        } catch (Exception e) {
-            logger.error("An expected error occurred during scraping: ", e);
+    public synchronized void runMatching() {
+        if (runningTask != null && !runningTask.isDone()) {
+            throw new IllegalStateException("Job matching is already running");
         }
+
+        // Logic for matching jobs with AI
+        runningTask = executor.submit(() -> {
+            try {
+                while (!Thread.currentThread().isInterrupted()) {
+                    doMatchingWork();
+                }
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
+
+        });
     }
 
     private void doMatchingByAIs(JobPosting jobPosting) {
         for ( String aiModel: aiClient.getAiModels() ) {
+            if (Thread.currentThread().isInterrupted()) {
+                logger.info("AI loop interrupted, stopping matching...");
+                return;
+            }
+
             logger.info("Working with ai model: {}", aiModel);
             Optional<MatchingResult> matchingResultInDb = matchingResultRepository.findByJobPostingAndAiModel(jobPosting, aiModel);
             if (matchingResultInDb.isEmpty() || appConfig.isRematch()) {
@@ -165,6 +159,56 @@ public class AIJobMatcherService {
 
     public List<JobMatchingResultDTO> getAllJobMatchingResults() {
         return jobPostingRepository.findAllWithMatchingResults();
+    }
+
+    public synchronized void stopJobMatching() {
+        if (runningTask != null && !runningTask.isDone()) {
+            runningTask.cancel(true); // sends interrupt
+        }
+    }
+
+    private void doMatchingWork() throws InterruptedException {
+        // simulate a unit of work
+        LocalDateTime jobHardTimeLimit = LocalDateTime.now().plusHours(1);//Force stop if the job runs longer than 1 hour
+        LocalDateTime currentTime = LocalDateTime.now();
+
+        try {
+            // Find all job cards by their attribute
+            while (jobScraper.hasNextPage() && currentTime.isBefore(jobHardTimeLimit)) { //default only scrape 3 pages and hard stop after 1 hour
+                if (Thread.currentThread().isInterrupted()) {
+                    logger.info("Job matching interrupted, stopping gracefully...");
+                    return; // exit loop
+                }
+
+                List<WebElement> jobCardList = jobScraper.scrapeJobCardListing();
+
+                jobCardList.stream()
+                        .limit(Integer.parseInt(appConfig.getMaxJobsPerPage())) //Can limit the program to process less job to speed up testing next page logic
+                        .forEach(jobCardWebElement -> {
+                            JobPosting jobPosting = jobScraper.digestJobCard(jobCardWebElement);
+
+                            if (isBannedJob(jobPosting)) return;
+
+                            Optional<JobPosting> jobPostingInDb = jobPostingRepository.findByJobId(jobPosting.getJobId());
+
+                            if (jobPostingInDb.isEmpty()) {
+                                jobPosting = jobScraper.scrapeJobDetails(jobPosting);
+                                jobPostingRepository.save(jobPosting);
+                            } else {
+                                jobPosting = jobPostingInDb.get();
+                                logger.info("Job already exists in the database: {}", jobPosting.getJobId());
+                            }
+
+                            doMatchingByAIs(jobPosting);
+                        });
+                jobScraper.findNextPage();
+            }
+        }catch(Exception e){
+            logger.error("An expected error occurred during scraping: ", e);
+        }
+
+        System.out.println("Matching jobs...");
+        Thread.sleep(2000); // example
     }
 
 }

@@ -91,16 +91,9 @@ public class SeleniumJobScraper implements JobScraper {
     //Left search result panel from jobsdb
     //return the raw html element
     @Override
-    public List<WebElement> scrapeJobCardListing() {
+    public List<WebElement> scrapeJobCardListing(){
         logger.info("Retrieving job cards from: {}", initUrl);
         RetryUtils.retryVoid(3, 2000, () -> listWebDriver.get(initUrl));
-
-        // Wait for jobs to load (basic sleep; for production use WebDriverWait)
-        try {
-            Thread.sleep(5000);
-        } catch (InterruptedException e) {
-            throw new RuntimeException(e);
-        }
 
         WebDriverWait wait = new WebDriverWait(listWebDriver, Duration.ofSeconds(10));
         wait.until(ExpectedConditions.presenceOfAllElementsLocatedBy(By.cssSelector("article[data-card-type=JobCard]")));

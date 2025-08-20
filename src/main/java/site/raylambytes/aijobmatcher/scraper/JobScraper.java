@@ -6,7 +6,7 @@ import site.raylambytes.aijobmatcher.jpa.JobPosting;
 import java.util.List;
 
 public interface JobScraper {
-    List<WebElement> scrapeJobCardListing();
+    List<WebElement> scrapeJobCardListing() throws InterruptedException;
     JobPosting digestJobCard(WebElement webElement);
     JobPosting scrapeJobDetails(JobPosting jobPosting);
     boolean hasNextPage();
