@@ -86,9 +86,7 @@ public class AIJobMatcherService {
         // Logic for matching jobs with AI
         runningTask = executor.submit(() -> {
             try {
-                while (!Thread.currentThread().isInterrupted()) {
-                    doMatchingWork();
-                }
+                doMatchingWork();
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
             }
@@ -207,8 +205,6 @@ public class AIJobMatcherService {
             logger.error("An expected error occurred during scraping: ", e);
         }
 
-        System.out.println("Matching jobs...");
-        Thread.sleep(2000); // example
     }
 
 }
