@@ -72,10 +72,6 @@ public class SeleniumJobScraper implements JobScraper {
 
     }
 
-    public String getInitUrl() {
-        return initUrl;
-    }
-
     public void setInitUrl(String initUrl) {
         this.initUrl = initUrl;
     }
@@ -142,8 +138,11 @@ public class SeleniumJobScraper implements JobScraper {
         try {
             Thread.sleep(5000);
         } catch (InterruptedException e) {
-            throw new RuntimeException(e);
+            Thread.currentThread().interrupt(); // restore the flag
+            logger.warn("Scraper interrupted while sleeping, exiting early...");
+            return jobPosting; // or break out gracefully
         }
+
         //Full Time or Part Time
         String jobType = tryFindOptionalElement(detailWebDriver,
                 By.cssSelector("span[data-automation='job-detail-work-type'], span[data-automation='job-detail-work-type'] a"))
@@ -187,7 +186,7 @@ public class SeleniumJobScraper implements JobScraper {
 
     @Override
     public void findNextPage(){
-        if ( currentPage > this.maxPages ){
+        if ( isMaxPageReached() ){
             logger.info("Max page page reached. Stop scraping.");
             this.setHasNextPage(false);
             return;
@@ -197,6 +196,7 @@ public class SeleniumJobScraper implements JobScraper {
         logger.info("Finding next page link...");
         Optional<WebElement> nextLink = tryFindOptionalElement(listWebDriver, By.cssSelector("a[data-automation='page-2']"));
 
+        this.setHasNextPage(nextLink.isPresent());
 
         if (nextLink.isPresent()){
             logger.info("Found next page link.");
@@ -211,12 +211,13 @@ public class SeleniumJobScraper implements JobScraper {
 
             logger.info("Url of next page: {}", absoluteUrl);
             this.setInitUrl(absoluteUrl);
-            this.setHasNextPage(true);
             currentPage++;
-        }else{
-            this.setHasNextPage(false);
         }
 
+    }
+
+    private boolean isMaxPageReached() {
+        return currentPage > this.maxPages;
     }
 
 
