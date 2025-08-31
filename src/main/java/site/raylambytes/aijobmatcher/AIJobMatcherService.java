@@ -180,9 +180,7 @@ public class AIJobMatcherService {
 
                 List<WebElement> jobCardList = jobScraper.scrapeJobCardListing();
 
-                jobCardList.stream()
-                        .limit(Integer.parseInt(appConfig.getMaxJobsPerPage())) //Can limit the program to process less job to speed up testing next page logic
-                        .forEach(jobCardWebElement -> {
+                jobCardList.forEach(jobCardWebElement -> {
                             JobPosting jobPosting = jobScraper.digestJobCard(jobCardWebElement);
 
                             if (isBannedJob(jobPosting)) return;
