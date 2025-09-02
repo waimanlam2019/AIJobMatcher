@@ -30,7 +30,7 @@ public class JobsDBNextButtonPaginationStrategy implements PaginationStrategy {
 
         String url = nextLink.get().getAttribute("href");
         logger.info("Next page URL: {}", url);
-        context.setInitUrl(url.startsWith("http") ? url : "https://hk.jobsdb.com" + url);
+        context.setCurrentUrl(url.startsWith("http") ? url : "https://hk.jobsdb.com" + url);
         context.incrementPage();
         return true;
     }

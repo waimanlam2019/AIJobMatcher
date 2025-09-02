@@ -167,38 +167,50 @@ public class AIJobMatcherService {
 
     private void scrapeJobPortalsAndDoAiMatching() throws InterruptedException {
         // simulate a unit of work
-        LocalDateTime jobHardTimeLimit = LocalDateTime.now().plusHours(1);//Force stop if the job runs longer than 1 hour
+        LocalDateTime jobHardTimeLimit = LocalDateTime.now().plusHours(2);//Force stop if the job runs longer than 2 hour
         LocalDateTime currentTime = LocalDateTime.now();
 
         try {
             // Find all job cards by their attribute
-            while (jobScraper.hasNextPage() && currentTime.isBefore(jobHardTimeLimit)) { //default only scrape 3 pages and hard stop after 1 hour
-                if (Thread.currentThread().isInterrupted()) {
-                    logger.info("Job matching interrupted, stopping gracefully...");
-                    return; // exit loop
-                }
 
-                List<WebElement> jobCardList = jobScraper.scrapeJobCardListing();
-
-                for(WebElement jobCardWebElement: jobCardList){
-                    JobPosting jobPosting = jobScraper.digestJobCard(jobCardWebElement);
-
-                    if (isBannedJob(jobPosting)) continue;
-
-                    Optional<JobPosting> jobPostingInDb = jobPostingRepository.findByJobId(jobPosting.getJobId());
-
-                    if (jobPostingInDb.isEmpty()) {
-                        jobPosting = jobScraper.scrapeJobDetails(jobPosting);
-                        jobPostingRepository.save(jobPosting);
-                    } else {
-                        jobPosting = jobPostingInDb.get();
-                        logger.info("Job already exists in the database: {}", jobPosting.getJobId());
+            for (String seedUrl : appConfig.getInitUrls()) {
+                //Replace the seedUrl
+                logger.info("Replacing seed URL to: {}", seedUrl);
+                jobScraper.replaceSeedUrl(seedUrl);
+                while (jobScraper.hasNextPage()) {
+                    /*
+                     * All code below is processing ONE PAGE of a job portal
+                     */
+                    if (currentTime.isAfter(jobHardTimeLimit)) {//hard stop after 2 hour
+                        return;
+                    }
+                    if (Thread.currentThread().isInterrupted()) {
+                        logger.info("Job matching interrupted, stopping gracefully...");
+                        return; // exit loop
                     }
 
-                    queryOllamaAIs(jobPosting);
-                }
+                    List<WebElement> jobCardList = jobScraper.scrapeJobCardListing();
 
-                jobScraper.findNextPage();
+                    for (WebElement jobCardWebElement : jobCardList) {
+                        JobPosting jobPosting = jobScraper.digestJobCard(jobCardWebElement);
+
+                        if (isBannedJob(jobPosting)) continue;
+
+                        Optional<JobPosting> jobPostingInDb = jobPostingRepository.findByJobId(jobPosting.getJobId());
+
+                        if (jobPostingInDb.isEmpty()) {
+                            jobPosting = jobScraper.scrapeJobDetails(jobPosting);
+                            jobPostingRepository.save(jobPosting);
+                        } else {
+                            jobPosting = jobPostingInDb.get();
+                            logger.info("Job already exists in the database: {}", jobPosting.getJobId());
+                        }
+
+                        queryOllamaAIs(jobPosting);
+                    }
+
+                    jobScraper.findNextPage();
+                }
             }
         }catch(Exception e){
             logger.error("An expected error occurred during scraping: ", e);

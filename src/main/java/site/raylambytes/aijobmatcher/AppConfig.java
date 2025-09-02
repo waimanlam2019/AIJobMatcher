@@ -10,6 +10,7 @@ import java.util.List;
 public class AppConfig {
     private String chromeDriverPath;
     private String initUrl;
+    private List<String> initUrls;
     private String maxPages;
     private String maxJobsPerPage;
     private boolean rematch;
@@ -38,6 +39,10 @@ public class AppConfig {
     public void setInitUrl(String initUrl) {
         this.initUrl = initUrl;
     }
+
+    public List<String> getInitUrls() {return initUrls;}
+
+    public void setInitUrls(List<String> initUrls) {this.initUrls = initUrls;}
 
     public String getMaxPages() {return maxPages;}
 

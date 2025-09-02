@@ -21,9 +21,9 @@ public class JobsDBJobScrapingStrategy implements JobScrapingStrategy {
 
     @Override
     public List<WebElement> scrapeJobCardListing(WebDriver listWebDriver, SeleniumScraperContext context) {
-        String initUrl = context.getInitUrl();
-        logger.info("Retrieving job cards from: {}", initUrl);
-        RetryUtils.retryVoid(3, 2000, () -> listWebDriver.get(initUrl));
+        String currentUrl = context.getCurrentUrl();
+        logger.info("Retrieving job cards from: {}", currentUrl);
+        RetryUtils.retryVoid(3, 2000, () -> listWebDriver.get(currentUrl));
 
         WebDriverWait wait = new WebDriverWait(listWebDriver, Duration.ofSeconds(10));
         wait.until(ExpectedConditions.presenceOfAllElementsLocatedBy(By.cssSelector("article[data-card-type=JobCard]")));

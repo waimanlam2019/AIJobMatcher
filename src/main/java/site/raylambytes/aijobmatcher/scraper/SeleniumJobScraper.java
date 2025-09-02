@@ -88,4 +88,11 @@ public class SeleniumJobScraper {
         return context.hasNextPage();
     }
 
+    public void replaceSeedUrl(String newUrl){
+        context.setInitUrl(newUrl);
+        context.setCurrentUrl(newUrl);
+        context.setCurrentPage(1);
+        context.setHasNextPage(true);
+    }
+
 }
