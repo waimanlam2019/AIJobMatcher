@@ -8,7 +8,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import site.raylambytes.aijobmatcher.AIJobMatcherService;
 import site.raylambytes.aijobmatcher.jpa.JobMatchingResultDTO;
-import site.raylambytes.aijobmatcher.scraper.SeleniumJobScraper;
 
 import java.util.List;
 
@@ -32,7 +31,7 @@ public class AIJobMatcherController {
     @PostMapping("/startjobmatching")
     public ResponseEntity<String> doJobMatching() {
         logger.info("Received POST request to start job matching");
-        aiJobMatcherService.runMatching();
+        aiJobMatcherService.startJobMatching();
         logger.info("Job matching process finished successfully");
         return ResponseEntity.ok("Received POST request. You handle it from here, boss.");
     }

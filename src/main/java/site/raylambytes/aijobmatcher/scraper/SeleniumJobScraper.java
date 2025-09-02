@@ -1,41 +1,35 @@
 package site.raylambytes.aijobmatcher.scraper;
 
 import io.github.bonigarcia.wdm.WebDriverManager;
-import org.openqa.selenium.By;
-import org.openqa.selenium.NoSuchElementException;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.chrome.ChromeOptions;
-import org.openqa.selenium.support.ui.ExpectedConditions;
-import org.openqa.selenium.support.ui.WebDriverWait;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import site.raylambytes.aijobmatcher.AppConfig;
-import site.raylambytes.aijobmatcher.util.RetryUtils;
 import site.raylambytes.aijobmatcher.jpa.JobPosting;
 
-import java.time.Duration;
 import java.util.*;
 
 @Service
-public class SeleniumJobScraper implements JobScraper {
+public class SeleniumJobScraper {
     private static final Logger logger = LoggerFactory.getLogger(SeleniumJobScraper.class);// for demo pu
     private final WebDriver listWebDriver;
     private final WebDriver detailWebDriver;
+    private final SeleniumScraperContext context;
+    private final PaginationStrategy paginationStrategy;
+    private final JobScrapingStrategy jobScrapingStrategy;
+
     private static final Random RANDOM = new Random();
 
-    private String initUrl;
-    private boolean hasNextPage = true;
-    private int currentPage = 1;
-    private int maxPages = 3;
-
     public SeleniumJobScraper(AppConfig appConfig) {
-        this.initUrl = appConfig.getInitUrl();
-        this.maxPages = Integer.parseInt(appConfig.getMaxPages());
-        WebDriverManager.chromedriver().setup();
+        this.context = new SeleniumScraperContext(appConfig.getInitUrl(), Integer.parseInt(appConfig.getMaxPages()));
+        this.paginationStrategy = new JobsDBNextButtonPaginationStrategy();
+        this.jobScrapingStrategy = new JobsDBJobScrapingStrategy();
 
+        WebDriverManager.chromedriver().setup();
         // Headless Chrome options
         ChromeOptions options = new ChromeOptions();
         options.addArguments("--headless=new"); // new headless mode for Chrome > 109
@@ -72,153 +66,26 @@ public class SeleniumJobScraper implements JobScraper {
 
     }
 
-    public void setInitUrl(String initUrl) {
-        this.initUrl = initUrl;
-    }
-
-    public boolean hasNextPage() {
-        return hasNextPage;
-    }
-
-    public void setHasNextPage(boolean hasNextPage) {
-        this.hasNextPage = hasNextPage;
-    }
-
     //Left search result panel from jobsdb
     //return the raw html element
-    @Override
     public List<WebElement> scrapeJobCardListing(){
-        logger.info("Retrieving job cards from: {}", initUrl);
-        RetryUtils.retryVoid(3, 2000, () -> listWebDriver.get(initUrl));
-
-        WebDriverWait wait = new WebDriverWait(listWebDriver, Duration.ofSeconds(10));
-        wait.until(ExpectedConditions.presenceOfAllElementsLocatedBy(By.cssSelector("article[data-card-type=JobCard]")));
-        List<WebElement> jobList = listWebDriver.findElements(By.cssSelector("article[data-card-type=JobCard]"));
-        logger.info("Found {} job(s) on jobsdb link.", jobList.size());
-        if (jobList.isEmpty()) {
-            logger.info("❌ No job found. Exiting.");
-            return new ArrayList<WebElement>();
-        }
-        return jobList;
+        return jobScrapingStrategy.scrapeJobCardListing(listWebDriver, context);
     }
 
-    @Override
     public JobPosting digestJobCard(WebElement webElement) {
-        logger.info("Processing job card...");
-        String title = tryFindOptionalElement(webElement, By.cssSelector("a[data-automation=jobTitle]"))
-                .map(WebElement::getText).orElse("Unknown");
-        String company = tryFindOptionalElement(webElement, By.cssSelector("a[data-automation=jobCompany]"))
-                .map(WebElement::getText).orElse("Unknown");
-        String location = tryFindOptionalElement(webElement, By.cssSelector("span[data-automation=jobLocation]"))
-                .map(WebElement::getText).orElse("Unknown");
-        String jobUrl = tryFindOptionalElement(webElement, By.cssSelector("a[data-automation=jobTitle]"))
-                .map(e->(e.getAttribute("href"))).orElse("Unknown");
-        String jobId = webElement.getAttribute("data-job-id");
-
-        logger.info("\uD83D\uDD17 Job Id: {}", jobId);
-        logger.info("\uD83D\uDD39 Title: {}", title);//Check
-        logger.info("\uD83C\uDFE2 Company: {}", company);//Check
-        logger.info("\uD83D\uDCCD Location: {}", location);
-        logger.info("\uD83D\uDD17 URL: {}", jobUrl);
-
-        JobPosting jobPosting = new JobPosting();
-        jobPosting.setJobId(jobId);
-        jobPosting.setTitle(title);
-        jobPosting.setCompany(company);
-        jobPosting.setLocation(location);
-        jobPosting.setUrl(jobUrl);
-        return jobPosting;
+        return jobScrapingStrategy.digestJobCard(webElement);
     }
 
-    @Override
     public JobPosting scrapeJobDetails(JobPosting jobPosting) {
-        logger.info("Retrieving job details from: {}", jobPosting.getUrl());
-        RetryUtils.retryVoid(3, 2000, () -> detailWebDriver.get(jobPosting.getUrl()));
-
-        try {
-            Thread.sleep(5000);
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt(); // restore the flag
-            logger.warn("Scraper interrupted while sleeping, exiting early...");
-            return jobPosting; // or break out gracefully
-        }
-
-        //Full Time or Part Time
-        String jobType = tryFindOptionalElement(detailWebDriver,
-                By.cssSelector("span[data-automation='job-detail-work-type'], span[data-automation='job-detail-work-type'] a"))
-                .map(WebElement::getText)
-                .orElse("Unknown");
-        logger.info("Job Type: {}", jobType);
-        jobPosting.setJobType(jobType);
-
-        Optional<WebElement> jobDescDiv = tryFindOptionalElement(detailWebDriver, By.cssSelector("div[data-automation='jobAdDetails']"));
-
-        if ( jobDescDiv.isPresent() ) {
-            // Get the full HTML inside the job description container
-            String jobDescriptionHtml = jobDescDiv.get().getAttribute("innerHTML");
-
-            // Or get only the visible text (stripped of tags)
-            String jobDescriptionText = jobDescDiv.get().getText();
-            logger.info("Job Description: {}", jobDescriptionText);
-            jobPosting.setDescription(jobDescriptionText);
-            jobPosting.setDescriptionHtml(jobDescriptionHtml);
-        }
-        return jobPosting;
+        return jobScrapingStrategy.scrapeDetails(detailWebDriver, jobPosting);
     }
 
-    public Optional<WebElement> tryFindOptionalElement(WebElement parent, By selector) {
-        try {
-            return Optional.of(parent.findElement(selector));
-        } catch (NoSuchElementException e) {
-            logger.warn("Element not found using selector: {}", selector);
-            return Optional.empty();
-        }
-    }
-
-    public Optional<WebElement> tryFindOptionalElement(WebDriver driver, By selector) {
-        try {
-            return Optional.of(driver.findElement(selector));
-        } catch (NoSuchElementException e) {
-            logger.warn("Element not found using selector: {}", selector);
-            return Optional.empty();
-        }
-    }
-
-    @Override
     public void findNextPage(){
-        if ( isMaxPageReached() ){
-            logger.info("Max page page reached. Stop scraping.");
-            this.setHasNextPage(false);
-            return;
-        }
-
-        // Find the "Next" button link using a reliable selector
-        logger.info("Finding next page link...");
-        Optional<WebElement> nextLink = tryFindOptionalElement(listWebDriver, By.cssSelector("a[data-automation='page-2']"));
-
-        this.setHasNextPage(nextLink.isPresent());
-
-        if (nextLink.isPresent()){
-            logger.info("Found next page link.");
-            // Extract the href attribute
-            String relativeUrl = nextLink.get().getAttribute("href");
-
-            // If it's a relative URL, convert to absolute
-            String absoluteUrl = relativeUrl;
-            if (!relativeUrl.startsWith("http")) {
-                absoluteUrl = "https://hk.jobsdb.com" + relativeUrl;
-            }
-
-            logger.info("Url of next page: {}", absoluteUrl);
-            this.setInitUrl(absoluteUrl);
-            currentPage++;
-        }
-
+        paginationStrategy.findNextPage(listWebDriver, context);
     }
 
-    private boolean isMaxPageReached() {
-        return currentPage > this.maxPages;
+    public boolean hasNextPage(){
+        return context.hasNextPage();
     }
-
 
 }

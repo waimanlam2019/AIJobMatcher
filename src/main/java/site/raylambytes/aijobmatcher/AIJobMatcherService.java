@@ -8,13 +8,11 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import site.raylambytes.aijobmatcher.ai.AIClient;
 import site.raylambytes.aijobmatcher.jpa.*;
-import site.raylambytes.aijobmatcher.scraper.JobScraper;
+import site.raylambytes.aijobmatcher.scraper.SeleniumJobScraper;
 import site.raylambytes.aijobmatcher.util.EmailNotifier;
 import site.raylambytes.aijobmatcher.util.PromptBuilder;
 import site.raylambytes.aijobmatcher.util.ResponseAnalyzer;
-import site.raylambytes.aijobmatcher.util.RetryUtils;
 
-import javax.swing.text.html.Option;
 import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.List;
@@ -53,7 +51,7 @@ public class AIJobMatcherService {
     private AIClient aiClient;
 
     @Autowired
-    private JobScraper jobScraper;
+    private SeleniumJobScraper jobScraper;
 
     @Autowired
     private JobPostingRepository jobPostingRepository;
@@ -73,12 +71,12 @@ public class AIJobMatcherService {
         for (JobPosting jobPosting : jobPostings) {
             if (isBannedJob(jobPosting)) continue;
             logger.info("Processing job: {}", jobPosting.getTitle());
-            doMatchingByAIs(jobPosting);
+            queryOllamaAIs(jobPosting);
         }
         logger.info("Matching finished. Total jobs processed: {}", jobPostings.size());
     }
     
-    public synchronized void runMatching() {
+    public synchronized void startJobMatching() {
         if (runningTask != null && !runningTask.isDone()) {
             throw new IllegalStateException("Job matching is already running");
         }
@@ -86,7 +84,7 @@ public class AIJobMatcherService {
         // Logic for matching jobs with AI
         runningTask = executor.submit(() -> {
             try {
-                doMatchingWork();
+                scrapeJobPortalsAndDoAiMatching();
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
             }
@@ -94,7 +92,13 @@ public class AIJobMatcherService {
         });
     }
 
-    private void doMatchingByAIs(JobPosting jobPosting) {
+    public synchronized void stopJobMatching() {
+        if (runningTask != null && !runningTask.isDone()) {
+            runningTask.cancel(true); // sends interrupt
+        }
+    }
+
+    private void queryOllamaAIs(JobPosting jobPosting) {
         for ( String aiModel: aiClient.getAiModels() ) {
             if (Thread.currentThread().isInterrupted()) {
                 logger.info("AI loop interrupted, stopping matching...");
@@ -159,13 +163,9 @@ public class AIJobMatcherService {
         return jobPostingRepository.findAllWithMatchingResults();
     }
 
-    public synchronized void stopJobMatching() {
-        if (runningTask != null && !runningTask.isDone()) {
-            runningTask.cancel(true); // sends interrupt
-        }
-    }
 
-    private void doMatchingWork() throws InterruptedException {
+
+    private void scrapeJobPortalsAndDoAiMatching() throws InterruptedException {
         // simulate a unit of work
         LocalDateTime jobHardTimeLimit = LocalDateTime.now().plusHours(1);//Force stop if the job runs longer than 1 hour
         LocalDateTime currentTime = LocalDateTime.now();
@@ -180,23 +180,24 @@ public class AIJobMatcherService {
 
                 List<WebElement> jobCardList = jobScraper.scrapeJobCardListing();
 
-                jobCardList.forEach(jobCardWebElement -> {
-                            JobPosting jobPosting = jobScraper.digestJobCard(jobCardWebElement);
+                for(WebElement jobCardWebElement: jobCardList){
+                    JobPosting jobPosting = jobScraper.digestJobCard(jobCardWebElement);
 
-                            if (isBannedJob(jobPosting)) return;
+                    if (isBannedJob(jobPosting)) return;
 
-                            Optional<JobPosting> jobPostingInDb = jobPostingRepository.findByJobId(jobPosting.getJobId());
+                    Optional<JobPosting> jobPostingInDb = jobPostingRepository.findByJobId(jobPosting.getJobId());
 
-                            if (jobPostingInDb.isEmpty()) {
-                                jobPosting = jobScraper.scrapeJobDetails(jobPosting);
-                                jobPostingRepository.save(jobPosting);
-                            } else {
-                                jobPosting = jobPostingInDb.get();
-                                logger.info("Job already exists in the database: {}", jobPosting.getJobId());
-                            }
+                    if (jobPostingInDb.isEmpty()) {
+                        jobPosting = jobScraper.scrapeJobDetails(jobPosting);
+                        jobPostingRepository.save(jobPosting);
+                    } else {
+                        jobPosting = jobPostingInDb.get();
+                        logger.info("Job already exists in the database: {}", jobPosting.getJobId());
+                    }
 
-                            doMatchingByAIs(jobPosting);
-                        });
+                    queryOllamaAIs(jobPosting);
+                }
+
                 jobScraper.findNextPage();
             }
         }catch(Exception e){
