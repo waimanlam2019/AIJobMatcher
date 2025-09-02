@@ -183,7 +183,7 @@ public class AIJobMatcherService {
                 for(WebElement jobCardWebElement: jobCardList){
                     JobPosting jobPosting = jobScraper.digestJobCard(jobCardWebElement);
 
-                    if (isBannedJob(jobPosting)) return;
+                    if (isBannedJob(jobPosting)) continue;
 
                     Optional<JobPosting> jobPostingInDb = jobPostingRepository.findByJobId(jobPosting.getJobId());
 
