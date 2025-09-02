@@ -9,6 +9,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import site.raylambytes.aijobmatcher.AppConfig;
+import site.raylambytes.aijobmatcher.JobConfig;
 import site.raylambytes.aijobmatcher.jpa.JobPosting;
 
 import java.util.*;
@@ -18,14 +19,13 @@ public class SeleniumJobScraper {
     private static final Logger logger = LoggerFactory.getLogger(SeleniumJobScraper.class);// for demo pu
     private final WebDriver listWebDriver;
     private final WebDriver detailWebDriver;
-    private final SeleniumScraperContext context;
+    private SeleniumScraperContext context;
     private final PaginationStrategy paginationStrategy;
     private final JobScrapingStrategy jobScrapingStrategy;
 
     private static final Random RANDOM = new Random();
 
     public SeleniumJobScraper(AppConfig appConfig) {
-        this.context = new SeleniumScraperContext(appConfig.getInitUrl(), Integer.parseInt(appConfig.getMaxPages()));
         this.paginationStrategy = new JobsDBNextButtonPaginationStrategy();
         this.jobScrapingStrategy = new JobsDBJobScrapingStrategy();
 
@@ -88,10 +88,12 @@ public class SeleniumJobScraper {
         return context.hasNextPage();
     }
 
-    public void replaceSeedUrl(String newUrl){
-        context.setInitUrl(newUrl);
-        context.setCurrentUrl(newUrl);
+    public void updateContext(JobConfig jobConfig){
+        this.context = new SeleniumScraperContext();
+        context.setInitUrl(jobConfig.getInitUrl());
+        context.setCurrentUrl(jobConfig.getInitUrl());
         context.setCurrentPage(1);
+        context.setMaxPages(jobConfig.getMaxPages());
         context.setHasNextPage(true);
     }
 

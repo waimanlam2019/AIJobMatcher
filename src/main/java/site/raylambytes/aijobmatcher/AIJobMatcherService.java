@@ -9,7 +9,6 @@ import org.springframework.stereotype.Service;
 import site.raylambytes.aijobmatcher.ai.AIClient;
 import site.raylambytes.aijobmatcher.jpa.*;
 import site.raylambytes.aijobmatcher.scraper.SeleniumJobScraper;
-import site.raylambytes.aijobmatcher.util.EmailNotifier;
 import site.raylambytes.aijobmatcher.util.PromptBuilder;
 import site.raylambytes.aijobmatcher.util.ResponseAnalyzer;
 
@@ -45,9 +44,6 @@ public class AIJobMatcherService {
     private AppConfig appConfig;
 
     @Autowired
-    private EmailNotifier emailNotifier;
-
-    @Autowired
     private AIClient aiClient;
 
     @Autowired
@@ -59,23 +55,6 @@ public class AIJobMatcherService {
     @Autowired
     private MatchingResultRepository matchingResultRepository;
 
-    @Value("${spring.profiles.active:default}")
-    private String activeProfile;
-
-    public void runMatchingOffline(){
-        // Logic for offline matching, e.g., reading from a file or database
-        // This is a placeholder for the actual implementation
-        logger.info("Running offline matching...");
-        logger.info("Active profile: {}", activeProfile);//part-time or default
-            List<JobPosting> jobPostings = activeProfile.equals("default")?jobPostingRepository.findAllByJobTypeInOrderByIdDesc(Arrays.asList("Full-Time", "Contract/Temp")):jobPostingRepository.findAllByJobTypeInOrderByIdDesc(Arrays.asList("Part time","Unknown"));
-        for (JobPosting jobPosting : jobPostings) {
-            if (isBannedJob(jobPosting)) continue;
-            logger.info("Processing job: {}", jobPosting.getTitle());
-            queryOllamaAIs(jobPosting);
-        }
-        logger.info("Matching finished. Total jobs processed: {}", jobPostings.size());
-    }
-    
     public synchronized void startJobMatching() {
         if (runningTask != null && !runningTask.isDone()) {
             throw new IllegalStateException("Job matching is already running");
@@ -98,7 +77,7 @@ public class AIJobMatcherService {
         }
     }
 
-    private void queryOllamaAIs(JobPosting jobPosting) {
+    private void queryOllamaAIs(JobPosting jobPosting, JobConfig jobConfig) {
         for ( String aiModel: aiClient.getAiModels() ) {
             if (Thread.currentThread().isInterrupted()) {
                 logger.info("AI loop interrupted, stopping matching...");
@@ -107,10 +86,10 @@ public class AIJobMatcherService {
 
             logger.info("Working with ai model: {}", aiModel);
             Optional<MatchingResult> matchingResultInDb = matchingResultRepository.findByJobPostingAndAiModel(jobPosting, aiModel);
-            if (matchingResultInDb.isEmpty() || appConfig.isRematch()) {
-                String aiRoleplay = appConfig.getAiRoleplay();
-                String candidateProfile = appConfig.getCandidateProfile();
-                String aiTask = appConfig.getAiTask();
+            if (matchingResultInDb.isEmpty() || jobConfig.isRematch()) {
+                String aiRoleplay = jobConfig.getAiRoleplay();
+                String candidateProfile = jobConfig.getCandidateProfile();
+                String aiTask = jobConfig.getAiTask();
                 PromptBuilder promptBuilder = new PromptBuilder(aiRoleplay, candidateProfile, jobPosting.getDescription(), aiTask);
                 String prompt = promptBuilder.buildPrompt();
 
@@ -173,10 +152,10 @@ public class AIJobMatcherService {
         try {
             // Find all job cards by their attribute
 
-            for (String seedUrl : appConfig.getInitUrls()) {
+            for (JobConfig jobConfig : appConfig.getJobConfigs()) {
                 //Replace the seedUrl
-                logger.info("Replacing seed URL to: {}", seedUrl);
-                jobScraper.replaceSeedUrl(seedUrl);
+                logger.info("Replacing seed URL to: {}", jobConfig.getInitUrl());
+                jobScraper.updateContext(jobConfig);
                 while (jobScraper.hasNextPage()) {
                     /*
                      * All code below is processing ONE PAGE of a job portal
@@ -206,7 +185,7 @@ public class AIJobMatcherService {
                             logger.info("Job already exists in the database: {}", jobPosting.getJobId());
                         }
 
-                        queryOllamaAIs(jobPosting);
+                        queryOllamaAIs(jobPosting, jobConfig);
                     }
 
                     jobScraper.findNextPage();

@@ -8,12 +8,7 @@ public class SeleniumScraperContext {
     private int maxPages;
     private boolean hasNextPage;
 
-    public SeleniumScraperContext(String initUrl, int maxPages) {
-        this.initUrl = initUrl;
-        this.currentUrl = initUrl;
-        this.maxPages = maxPages;
-        this.currentPage = 1;
-        this.hasNextPage = true;
+    public SeleniumScraperContext() {
     }
 
     public String getInitUrl() { return initUrl; }
@@ -29,6 +24,7 @@ public class SeleniumScraperContext {
     public void incrementPage() { this.currentPage++; }
 
     public int getMaxPages() { return maxPages; }
+    public void setMaxPages(int maxPages) { this.maxPages = maxPages; }
 
     public boolean hasNextPage() { return hasNextPage; }
     public void setHasNextPage(boolean hasNextPage) { this.hasNextPage = hasNextPage; }
