@@ -48,19 +48,19 @@ public class OllamaAIClient implements AIClient {
         }
 
         JSONObject obj = new JSONObject(response.body());
+        tokenUsage += obj.getJSONObject("usage").getInt("total_tokens");
         JSONArray choices = obj.getJSONArray("choices");
         return choices.getJSONObject(0).getString("text");
     }
 
     @Override
-    public Long estimateTokenUsage(String text) {
-        tokenUsage+= text.length()/ 4L;
-        return tokenUsage;
+    public List<String> getAiModels() {
+        return aiModels;
     }
 
     @Override
-    public List<String> getAiModels() {
-        return aiModels;
+    public Long getTokenUsage() {
+        return tokenUsage;
     }
 
     @Override

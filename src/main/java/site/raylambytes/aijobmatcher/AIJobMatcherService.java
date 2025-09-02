@@ -1,5 +1,7 @@
 package site.raylambytes.aijobmatcher;
 
+import org.json.JSONArray;
+import org.json.JSONObject;
 import org.openqa.selenium.WebElement;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -94,13 +96,12 @@ public class AIJobMatcherService {
                 String prompt = promptBuilder.buildPrompt();
 
                 logger.info("Prompt: {}", prompt);
-                logger.info("Token usage estimate: {}", aiClient.estimateTokenUsage(prompt));
-
                 String suggestion = aiClient.query(prompt, aiModel);
 
                 // Print it nicely
                 logger.info("Ollama Suggestion:\n{}", suggestion.trim());
-                logger.info("Token usage estimate: {}", aiClient.estimateTokenUsage(suggestion));
+
+                logger.info("Token usage: {}", aiClient.getTokenUsage());
 
 
                 boolean shortlistFlag = ResponseAnalyzer.isJobGoodToApply(suggestion);
