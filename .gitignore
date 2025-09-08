@@ -32,8 +32,3 @@ build/
 ### VS Code ###
 .vscode/
 
-
-src/main/resources/application.properties
-src/main/resources/application-docker.properties
-src/main/resources/application-docker-part-time.properties
-src/main/resources/application-part-time.properties

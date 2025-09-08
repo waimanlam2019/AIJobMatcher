@@ -16,45 +16,64 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.util.List;
 
-@Profile("default")
+@Profile("deepseek")
 @Primary
 @Service
-public class OllamaAIClient implements AIClient {
-    private static final Logger logger = LoggerFactory.getLogger(OllamaAIClient.class);
+public class DeepSeekAIClient implements AIClient{
+    private static final Logger logger = LoggerFactory.getLogger(DeepSeekAIClient.class);
 
     private final List<String> aiModels;
     private final HttpClient client;
     private final String endpoint;
+    private final String apiKey;
     private Long tokenUsage = 0L;
 
-    public OllamaAIClient(AppConfig appConfig) {
+    public DeepSeekAIClient(AppConfig appConfig) {
         this.aiModels = appConfig.getAiModels();
         this.client = HttpClient.newHttpClient();
         this.endpoint = appConfig.getAiEndpoint();
+        this.apiKey = appConfig.getApiKey();
     }
 
     @Override
     public String query(String prompt, String aiModel) {
-        String jsonPayload = "{\"model\":\"" + aiModel + "\", \"prompt\":\"" + prompt + "\"}";
+        // Build messages array
+        JSONArray messages = new JSONArray();
+        messages.put(new JSONObject().put("role", "system").put("content", "You are a helpful assistant."));
+        messages.put(new JSONObject().put("role", "user").put("content", prompt));
+
+        // Build payload
+        JSONObject jsonPayload = new JSONObject();
+        jsonPayload.put("model", aiModel);
+        jsonPayload.put("messages", messages);
+        jsonPayload.put("stream", false);
 
         HttpRequest request = HttpRequest.newBuilder()
                 .uri(URI.create(endpoint))
                 .header("Content-Type", "application/json")
-                .POST(HttpRequest.BodyPublishers.ofString(jsonPayload))
+                .header("Authorization", "Bearer " + apiKey)
+                .POST(HttpRequest.BodyPublishers.ofString(jsonPayload.toString()))
                 .build();
 
-        HttpResponse<String> response = null;
+        HttpResponse<String> response;
         try {
             response = client.send(request, HttpResponse.BodyHandlers.ofString());
+            logger.info("DeepSeek response: {}", response.body());
         } catch (IOException | InterruptedException e) {
-            logger.error("❌ Error querying AI model: ", e);
+            logger.error("❌ Error querying DeepSeek API: ", e);
             throw new RuntimeException(e);
         }
 
+        // Parse response
         JSONObject obj = new JSONObject(response.body());
         tokenUsage += obj.getJSONObject("usage").getInt("total_tokens");
+
         JSONArray choices = obj.getJSONArray("choices");
-        return choices.getJSONObject(0).getString("text");
+        String answer = choices.getJSONObject(0)
+                .getJSONObject("message")
+                .getString("content");
+
+        return answer;
     }
 
     @Override
@@ -62,17 +81,9 @@ public class OllamaAIClient implements AIClient {
         return aiModels;
     }
 
+
     @Override
     public Long getTokenUsage() {
         return tokenUsage;
-    }
-
-    @Override
-    public String toString() {
-        return "OllamaAIClient{" +
-                "aiModels='" + aiModels + '\'' +
-                ", client=" + client +
-                ", endpoint='" + endpoint + '\'' +
-                '}';
     }
 }

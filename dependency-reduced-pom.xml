@@ -72,7 +72,7 @@
               </filters>
               <transformers>
                 <transformer>
-                  <mainClass>site.raylambytes.aijobmatcher.AIJobMatcherBatch</mainClass>
+                  <mainClass>site.raylambytes.aijobmatcher.AIJobMatcherAPI</mainClass>
                 </transformer>
               </transformers>
             </configuration>

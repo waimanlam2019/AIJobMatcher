@@ -12,6 +12,7 @@ public class AppConfig {
     private boolean offlineMode;
     private List<String> aiModels;
     private String aiEndpoint;
+    private String apiKey;
     private List<JobConfig> jobConfigs;
 
     public String getChromeDriverPath() {
@@ -36,6 +37,14 @@ public class AppConfig {
 
     public void setAiModels(List<String> aiModels) {
         this.aiModels = aiModels;
+    }
+
+    public String getApiKey() {
+        return apiKey;
+    }
+
+    public void setApiKey(String apiKey) {
+        this.apiKey = apiKey;
     }
 
     public String getAiEndpoint() {

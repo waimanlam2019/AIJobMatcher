@@ -1,12 +1,9 @@
 package site.raylambytes.aijobmatcher;
 
-import org.json.JSONArray;
-import org.json.JSONObject;
 import org.openqa.selenium.WebElement;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import site.raylambytes.aijobmatcher.ai.AIClient;
 import site.raylambytes.aijobmatcher.jpa.*;
@@ -15,7 +12,6 @@ import site.raylambytes.aijobmatcher.util.PromptBuilder;
 import site.raylambytes.aijobmatcher.util.ResponseAnalyzer;
 
 import java.time.LocalDateTime;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.ExecutorService;
@@ -79,7 +75,7 @@ public class AIJobMatcherService {
         }
     }
 
-    private void queryOllamaAIs(JobPosting jobPosting, JobConfig jobConfig) {
+    private void queryAIs(JobPosting jobPosting, JobConfig jobConfig) {
         for ( String aiModel: aiClient.getAiModels() ) {
             if (Thread.currentThread().isInterrupted()) {
                 logger.info("AI loop interrupted, stopping matching...");
@@ -186,7 +182,7 @@ public class AIJobMatcherService {
                             logger.info("Job already exists in the database: {}", jobPosting.getJobId());
                         }
 
-                        queryOllamaAIs(jobPosting, jobConfig);
+                        queryAIs(jobPosting, jobConfig);
                     }
 
                     jobScraper.findNextPage();
