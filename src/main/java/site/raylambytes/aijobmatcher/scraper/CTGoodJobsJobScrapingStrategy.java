@@ -4,6 +4,8 @@ import org.openqa.selenium.By;
 import org.openqa.selenium.NoSuchElementException;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
+import org.openqa.selenium.remote.RemoteWebDriver;
+import org.openqa.selenium.remote.RemoteWebElement;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;
 import org.slf4j.Logger;
@@ -16,8 +18,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-public class JobsDBJobScrapingStrategy implements JobScrapingStrategy {
-    private static final Logger logger = LoggerFactory.getLogger(JobsDBJobScrapingStrategy.class);
+public class CTGoodJobsJobScrapingStrategy implements JobScrapingStrategy {
+    private static final Logger logger = LoggerFactory.getLogger(CTGoodJobsJobScrapingStrategy.class);
 
     @Override
     public List<WebElement> scrapeJobCardListing(WebDriver listWebDriver, SeleniumScraperContext context) {
@@ -26,8 +28,8 @@ public class JobsDBJobScrapingStrategy implements JobScrapingStrategy {
         RetryUtils.retryVoid(3, 2000, () -> listWebDriver.get(currentUrl));
 
         WebDriverWait wait = new WebDriverWait(listWebDriver, Duration.ofSeconds(10));
-        wait.until(ExpectedConditions.presenceOfAllElementsLocatedBy(By.cssSelector("article[data-card-type=JobCard]")));
-        List<WebElement> jobList = listWebDriver.findElements(By.cssSelector("article[data-card-type=JobCard]"));
+        wait.until(ExpectedConditions.presenceOfAllElementsLocatedBy(By.cssSelector("div.job-list-w")));
+        List<WebElement> jobList = listWebDriver.findElements(By.cssSelector("div.job-card"));
         logger.info("Found {} job(s) on jobsdb link.", jobList.size());
         if (jobList.isEmpty()) {
             logger.info("❌ No job found. Exiting.");
@@ -39,13 +41,18 @@ public class JobsDBJobScrapingStrategy implements JobScrapingStrategy {
     @Override
     public JobPosting digestJobCard(WebElement webElement) {
         logger.info("Processing job card...");
-        String title = tryFindOptionalElement(webElement, By.cssSelector("a[data-automation=jobTitle]"))
+
+        WebDriver driver = ((RemoteWebDriver) ((RemoteWebElement) webElement).getWrappedDriver());
+        WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(5));
+        wait.until(ExpectedConditions.presenceOfNestedElementLocatedBy(webElement, By.cssSelector("a.jc-position > h2")));
+
+        String title = tryFindOptionalElement(webElement, By.cssSelector("a.jc-position > h2"))
                 .map(WebElement::getText).orElse("Unknown");
-        String company = tryFindOptionalElement(webElement, By.cssSelector("a[data-automation=jobCompany]"))
+        String company = tryFindOptionalElement(webElement, By.cssSelector("a.jc-company"))
                 .map(WebElement::getText).orElse("Unknown");
-        String location = tryFindOptionalElement(webElement, By.cssSelector("span[data-automation=jobLocation]"))
+        String location = tryFindOptionalElement(webElement, By.cssSelector("div.row.jc-info > div.col-12"))
                 .map(WebElement::getText).orElse("Unknown");
-        String jobUrl = tryFindOptionalElement(webElement, By.cssSelector("a[data-automation=jobTitle]"))
+        String jobUrl = tryFindOptionalElement(webElement, By.cssSelector("a.jc-position"))
                 .map(e->(e.getAttribute("href"))).orElse("Unknown");
         String jobId = webElement.getAttribute("data-job-id");
 
@@ -57,7 +64,7 @@ public class JobsDBJobScrapingStrategy implements JobScrapingStrategy {
 
         JobPosting jobPosting = new JobPosting();
         jobPosting.setJobId(jobId);
-        jobPosting.setSource("jobsdb");
+        jobPosting.setSource("CTgoodjobs");
         jobPosting.setTitle(title);
         jobPosting.setCompany(company);
         jobPosting.setLocation(location);
@@ -79,19 +86,19 @@ public class JobsDBJobScrapingStrategy implements JobScrapingStrategy {
         }
 
         //Full Time or Part Time
-        String jobType = tryFindOptionalElement(detailWebDriver,
+        //TODO it seems there is not full time or part time info on CTgoodjobs
+        /*String jobType = tryFindOptionalElement(detailWebDriver,
                 By.cssSelector("span[data-automation='job-detail-work-type'], span[data-automation='job-detail-work-type'] a"))
                 .map(WebElement::getText)
                 .orElse("Unknown");
-        logger.info("Job Type: {}", jobType);
-        jobPosting.setJobType(jobType);
+        logger.info("Job Type: {}", jobType);*/
+        jobPosting.setJobType("Unknown");//
 
-        Optional<WebElement> jobDescDiv = tryFindOptionalElement(detailWebDriver, By.cssSelector("div[data-automation='jobAdDetails']"));
+        Optional<WebElement> jobDescDiv = tryFindOptionalElement(detailWebDriver, By.cssSelector("div.jd__sec.jd__desc"));
 
         if ( jobDescDiv.isPresent() ) {
             // Get the full HTML inside the job description container
             String jobDescriptionHtml = jobDescDiv.get().getAttribute("innerHTML");
-
             // Or get only the visible text (stripped of tags)
             String jobDescriptionText = jobDescDiv.get().getText();
             logger.info("Job Description: {}", jobDescriptionText);

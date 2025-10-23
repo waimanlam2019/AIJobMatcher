@@ -16,7 +16,7 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.util.List;
 
-@Profile("default")
+@Profile({"default", "parttime", "unique"})
 @Primary
 @Service
 public class OllamaAIClient implements AIClient {

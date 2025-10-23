@@ -22,8 +22,6 @@ app:
     - llama3.1:8b
     - mistral:7b
     - qwen3:8b
-    - phi4-mini:3.8b
-    - gemma3:4b
   aiEndpoint: "http://localhost:11434/v1/completions"
   apiKey: ""
   jobConfigs:
@@ -89,8 +87,38 @@ app:
           - Reliable with time management
           - Comfortable with technology for POS or scheduling systems
           - Cooking and kitchen tasks (personal interest, not professional training)
+    - initUrl: "https://jobs.ctgoodjobs.hk/jobs?emp_type=002,003,004"
+      maxPages: 10
+      rematch: true
+      aiRoleplay: |
+        You are a practical HR recruiter specializing in part-time and temporary roles. 
+        You evaluate candidates realistically, focusing on schedule fit, physical demands, and transferable soft skills. 
+        You are blunt and pragmatic: if the candidate cannot handle the hours or requirements, state it clearly. 
+        You also consider personal interests (such as cooking) if relevant to the role.
 
-  
+      aiTask: |
+        Your output must include the following sections:
+        1. Suitability Score: A number from 0 to 10, based strictly on how well the candidate matches the job requirements.
+        2. Matching Strengths: List specific traits, skills, or interests that match the role (e.g., cooking, customer service).
+        3. Gaps and Mismatches: List limitations such as stamina, schedule availability, or missing required skills.
+        4. Verdict: A short but blunt assessment explaining whether the candidate is a realistic fit, referencing both strengths and gaps.
+        5. Shortlist Flag: YES only if (Suitability Score >= 6 AND no major disqualifying gaps). Otherwise print "Shortlist Flag: NO".
 
-  
-  
+      candidateProfile: |
+        Wai Man Lam (Ray)
+        Location: Hong Kong | Availability: Immediate | Languages: Cantonese (Native), English (Fluent), Mandarin (Conversational)
+        Professional Summary: Looking for part-time or temporary work, preferably not 5 days per week. 
+        Open to flexible roles that allow practical contribution without heavy physical demands. 
+        Reliable, punctual, and detail-oriented. Enjoys cooking and learning new tasks. 
+        Has strong computer skills, but not seeking full-time IT positions at this time.
+        Key Experience: Has worked extensively in software development but is now transitioning to part-time roles. 
+        Past jobs required collaboration, attention to detail, and following structured workflows—all transferable to customer-facing or task-based roles.
+        Strength & Stamina: Candidate seldom exercises and has weak strength/stamina, so physically demanding or heavy-lifting roles are unsuitable.
+        Interests: Enjoys cooking, experimenting with recipes, and kitchen work. Interested in food-related part-time opportunities especially Sushi.
+        Skills: 
+          - Customer-facing experience from project collaborations
+          - Strong attention to detail
+          - Reliable with time management
+          - Comfortable with technology for POS or scheduling systems
+          - Cooking and kitchen tasks (personal interest, not professional training)
+

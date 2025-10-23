@@ -9,6 +9,7 @@ public class JobPosting {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)  // Auto increment
     private Integer id;
+    private String source;
     @Column(name = "job_id", nullable = false, unique = true)
     private String jobId;
     private String title;
@@ -32,6 +33,8 @@ public class JobPosting {
     public void setId(Integer id) {
         this.id = id;
     }
+
+    public void setSource(String source) {this.source = source;}
 
     public String getTitle() {
         return title;

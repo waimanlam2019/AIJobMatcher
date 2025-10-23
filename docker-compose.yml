@@ -20,25 +20,6 @@ services:
     ports:
       - "8090:80"
     restart: unless-stopped
-  ollama:
-    image: ollama/ollama
-    container_name: ollama
-    ports:
-      - "11434:11434"
-    volumes:
-      - ollama_data:/root/.ollama
-    restart: unless-stopped
-    entrypoint: [ "/bin/bash", "-c", "\
-          ollama serve & \
-          sleep 5 && \
-          ollama pull mistral && wait" ]
-  app1:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    depends_on:
-      - ollama
 
 volumes:
-  ollama_data:
   postgres_data:

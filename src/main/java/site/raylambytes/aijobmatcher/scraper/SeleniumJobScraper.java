@@ -12,6 +12,8 @@ import site.raylambytes.aijobmatcher.AppConfig;
 import site.raylambytes.aijobmatcher.JobConfig;
 import site.raylambytes.aijobmatcher.jpa.JobPosting;
 
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.*;
 
 @Service
@@ -20,18 +22,28 @@ public class SeleniumJobScraper {
     private final WebDriver listWebDriver;
     private final WebDriver detailWebDriver;
     private SeleniumScraperContext context;
-    private final PaginationStrategy paginationStrategy;
-    private final JobScrapingStrategy jobScrapingStrategy;
+    private PaginationStrategy paginationStrategy;
+    private JobScrapingStrategy jobScrapingStrategy;
 
     private static final Random RANDOM = new Random();
 
     public SeleniumJobScraper(AppConfig appConfig) {
         this.paginationStrategy = new JobsDBNextButtonPaginationStrategy();
         this.jobScrapingStrategy = new JobsDBJobScrapingStrategy();
+        //TODO revive this line later
+        //WebDriverManager.chromedriver().setup();
+        //TODO remove this line later
+        System.setProperty("webdriver.chrome.driver", "C:\\Users\\USER\\Downloads\\chromedriver-win64\\chromedriver-win64\\chromedriver.exe");
 
-        WebDriverManager.chromedriver().setup();
         // Headless Chrome options
+
+
         ChromeOptions options = new ChromeOptions();
+
+        //Force program to use custom chrome binary
+        options.setBinary("C:\\Users\\USER\\Downloads\\chrome-win64\\chrome-win64\\chrome.exe");
+
+
         options.addArguments("--headless=new"); // new headless mode for Chrome > 109
         options.addArguments("--window-size=1920,1080");
         options.addArguments("--disable-blink-features=AutomationControlled");
@@ -95,6 +107,22 @@ public class SeleniumJobScraper {
         context.setCurrentPage(1);
         context.setMaxPages(jobConfig.getMaxPages());
         context.setHasNextPage(true);
+
+        URL url = null;
+        try {
+            url = new URL(jobConfig.getInitUrl());
+        } catch (MalformedURLException e) {
+            throw new RuntimeException(e);
+        }
+        String host = url.getHost().toLowerCase();
+
+        if (host.contains("ctgoodjobs.hk")) {
+            this.paginationStrategy = new CTgoodjobsNextButtonPaginationStrategy();
+            this.jobScrapingStrategy = new CTGoodJobsJobScrapingStrategy();
+        }else { //jobsdb
+            this.paginationStrategy = new JobsDBNextButtonPaginationStrategy();
+            this.jobScrapingStrategy = new JobsDBJobScrapingStrategy();
+        }
     }
 
 }
