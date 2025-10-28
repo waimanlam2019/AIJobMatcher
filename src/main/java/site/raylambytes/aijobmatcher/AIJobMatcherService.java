@@ -100,13 +100,9 @@ public class AIJobMatcherService {
                     }
 
                     List<WebElement> jobCardList = jobScraper.scrapeJobCardListing();
-                    int processJobCount = 0;
                     for (WebElement jobCardWebElement : jobCardList) {
                         JobPosting jobPosting = jobScraper.digestJobCard(jobCardWebElement);
 
-                        if (processJobCount >2){
-                            break;
-                        }
                         if (isBannedJob(jobPosting)) continue;
 
                         Optional<JobPosting> jobPostingInDb = jobPostingRepository.findByJobId(jobPosting.getJobId());
@@ -120,7 +116,6 @@ public class AIJobMatcherService {
                         }
 
                         queryAIs(jobPosting, jobConfig);
-                        processJobCount++;
                     }
 
                     jobScraper.findNextPage();
