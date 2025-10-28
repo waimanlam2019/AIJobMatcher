@@ -44,7 +44,8 @@ public class SeleniumJobScraper {
         options.setBinary("C:\\Users\\USER\\Downloads\\chrome-win64\\chrome-win64\\chrome.exe");
 
 
-        options.addArguments("--headless=new"); // new headless mode for Chrome > 109
+        //options.addArguments("--headless=new"); // new headless mode for Chrome > 109
+        options.addArguments("--start-maximized");
         options.addArguments("--window-size=1920,1080");
         options.addArguments("--disable-blink-features=AutomationControlled");
         options.addArguments("--disable-infobars");

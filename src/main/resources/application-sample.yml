@@ -1,0 +1,87 @@
+spring:
+  application:
+    name: aijobmatcher
+  datasource:
+    url: jdbc:postgresql://localhost:5432/aijobmatcher
+    username: admin
+    password: secret123
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: true
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
+
+app:
+  chromeDriverPath: "C:\\Users\\USER\\Downloads\\chromedriver-win64\\chromedriver-win64\\chromedriver.exe"
+  offlineMode: false
+  aiModels:
+    - llama3.1:8b
+    - mistral:7b
+    - qwen3:8b
+  aiEndpoint: "http://localhost:11434/v1/completions"
+  apiKey: ""
+  jobConfigs:
+    - initUrl: "https://hk.jobsdb.com/Java-jobs-in-information-communication-technology?sortmode=ListedDate"
+      maxPages: 10
+      rematch: false
+      aiRoleplay: |
+        You are a senior technical recruiter with a sharp eye for real-world fit. You evaluate candidates with strict adherence to job requirements, but you also recognize transferable skills, equivalent experience, and potential. You are blunt, honest, and never sugarcoat—but you do not auto-reject capable candidates for lacking optional or niche skills. Your assessments are grounded, balanced, and ruthless only when necessary.
+      aiTask: |
+        Your output must include the following sections, and they must be logically consistent:
+        1. Suitability Score: A number from 0 to 10 based *strictly* on how well the candidate matches the job requirements. No inflation.
+        2. Matching Strengths: List exact skills, tools, and experiences that match the job requirements.
+        3. Gaps and Mismatches: List all missing, unclear, outdated, or irrelevant experience.
+        4. Verdict: Provide a blunt and honest assessment based on the above, written as a clear and direct paragraph (at least 3-4 sentences). Explain exactly why the candidate is or is not suitable, referencing both matching strengths and major gaps. If the candidate lacks core skills, clearly state this and explain the likely impact on job performance.
+        5. Shortlist Flag: YES only if (Suitability Score >= 6 AND no major missing skills). Otherwise print "Shortlist Flag: NO".
+
+      candidateProfile: |
+        John Doe
+        Location: Hong Kong | Availability: Immediate | Languages: English (Fluent), Cantonese (Conversational)
+        Education: BSc Computer Science, City University (2012); Java-based final year project
+        Professional Summary: Java backend developer with 8+ years of experience building REST APIs and microservices using Spring Boot. Skilled in database design, CI/CD pipelines, and containerized deployments. Experience working in Agile teams and delivering enterprise applications.
+        Key Experience: 
+        Independent Projects (Jan 2025 - Present): Developing a Spring Boot job-matching platform with PostgreSQL and Docker deployment. Implementing automated web scraping and REST API design patterns.
+        FinTech Company Ltd (2020 - 2024): Built payment processing APIs using Spring Boot and MySQL. Implemented JWT authentication and integrated third-party payment gateways. Worked in Agile sprints with distributed teams.
+        Telecom Solutions Inc (2016 - 2020): Developed customer portal APIs using Spring Framework and Oracle database. Modernized legacy systems and improved application performance by 30%.
+        Software Consulting Firm (2012 - 2016): Created J2EE web applications for various clients. Developed RESTful services and internal tools using Spring MVC and PostgreSQL.
+        Skills: 
+        Proficient: Java, Spring Boot, Spring MVC, REST APIs, PostgreSQL, MySQL, Docker, Git, Maven, Jenkins
+        Intermediate: Spring WebFlux, JavaScript, HTML/CSS, AWS basics
+        Learning: Microservices architecture, Kubernetes, React
+
+    - initUrl: "https://hk.jobsdb.com/jobs/part-time?sortmode=ListedDate"
+      maxPages: 10
+      rematch: false
+      aiRoleplay: |
+        You are a practical HR recruiter specializing in part-time and temporary roles. 
+        You evaluate candidates realistically, focusing on schedule fit, physical demands, and transferable soft skills. 
+        You are blunt and pragmatic: if the candidate cannot handle the hours or requirements, state it clearly. 
+        You also consider personal interests (such as cooking) if relevant to the role.
+
+      aiTask: |
+        Your output must include the following sections:
+        1. Suitability Score: A number from 0 to 10, based strictly on how well the candidate matches the job requirements.
+        2. Matching Strengths: List specific traits, skills, or interests that match the role (e.g., cooking, customer service).
+        3. Gaps and Mismatches: List limitations such as stamina, schedule availability, or missing required skills.
+        4. Verdict: A short but blunt assessment explaining whether the candidate is a realistic fit, referencing both strengths and gaps.
+        5. Shortlist Flag: YES only if (Suitability Score >= 6 AND no major disqualifying gaps). Otherwise print "Shortlist Flag: NO".
+
+      candidateProfile: |
+        Jane Smith
+        Location: Hong Kong | Availability: Part-time only | Languages: Cantonese (Native), English (Fluent)
+        Professional Summary: Seeking part-time flexible work, preferably 2-3 days per week. 
+        Reliable, detail-oriented, and enjoys hands-on practical work. Strong interpersonal skills from previous office roles. 
+        Interested in food service, retail, or customer-facing positions. Has basic computer skills.
+        Key Experience: Previously worked in office administration, which required organization, customer interaction, and following procedures. Now transitioning to part-time work for better work-life balance.
+        Strength & Stamina: Limited physical stamina, so roles requiring heavy lifting or extended standing (8+ hours) are not suitable.
+        Interests: Enjoys cooking and baking as a hobby. Interested in food preparation roles, especially bakery or light kitchen work. Also open to retail or reception positions.
+        Skills: 
+          - Customer service and communication
+          - Attention to detail and time management
+          - Comfortable with basic POS systems and scheduling software
+          - Home cooking experience (not professional training)
+          - Punctual and reliable

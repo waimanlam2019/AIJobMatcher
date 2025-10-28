@@ -75,6 +75,63 @@ public class AIJobMatcherService {
         }
     }
 
+    private void scrapeJobPortalsAndDoAiMatching() throws InterruptedException {
+        // simulate a unit of work
+        LocalDateTime jobHardTimeLimit = LocalDateTime.now().plusHours(2);//Force stop if the job runs longer than 2 hour
+        LocalDateTime currentTime = LocalDateTime.now();
+
+        try {
+            // Find all job cards by their attribute
+
+            for (JobConfig jobConfig : appConfig.getJobConfigs()) {
+                //Replace the seedUrl
+                logger.info("Replacing seed URL to: {}", jobConfig.getInitUrl());
+                jobScraper.updateContext(jobConfig);
+                while (jobScraper.hasNextPage()) {
+                    /*
+                     * All code below is processing ONE PAGE of a job portal
+                     */
+                    if (currentTime.isAfter(jobHardTimeLimit)) {//hard stop after 2 hour
+                        return;
+                    }
+                    if (Thread.currentThread().isInterrupted()) {
+                        logger.info("Job matching interrupted, stopping gracefully...");
+                        return; // exit loop
+                    }
+
+                    List<WebElement> jobCardList = jobScraper.scrapeJobCardListing();
+                    int processJobCount = 0;
+                    for (WebElement jobCardWebElement : jobCardList) {
+                        JobPosting jobPosting = jobScraper.digestJobCard(jobCardWebElement);
+
+                        if (processJobCount >2){
+                            break;
+                        }
+                        if (isBannedJob(jobPosting)) continue;
+
+                        Optional<JobPosting> jobPostingInDb = jobPostingRepository.findByJobId(jobPosting.getJobId());
+
+                        if (jobPostingInDb.isEmpty()) {
+                            jobPosting = jobScraper.scrapeJobDetails(jobPosting);
+                            jobPostingRepository.save(jobPosting);
+                        } else {
+                            jobPosting = jobPostingInDb.get();
+                            logger.info("Job already exists in the database: {}", jobPosting.getJobId());
+                        }
+
+                        queryAIs(jobPosting, jobConfig);
+                        processJobCount++;
+                    }
+
+                    jobScraper.findNextPage();
+                }
+            }
+        }catch(Exception e){
+            logger.error("An expected error occurred during scraping: ", e);
+        }
+
+    }
+
     private void queryAIs(JobPosting jobPosting, JobConfig jobConfig) {
         for ( String aiModel: aiClient.getAiModels() ) {
             if (Thread.currentThread().isInterrupted()) {
@@ -141,57 +198,6 @@ public class AIJobMatcherService {
 
 
 
-    private void scrapeJobPortalsAndDoAiMatching() throws InterruptedException {
-        // simulate a unit of work
-        LocalDateTime jobHardTimeLimit = LocalDateTime.now().plusHours(2);//Force stop if the job runs longer than 2 hour
-        LocalDateTime currentTime = LocalDateTime.now();
 
-        try {
-            // Find all job cards by their attribute
-
-            for (JobConfig jobConfig : appConfig.getJobConfigs()) {
-                //Replace the seedUrl
-                logger.info("Replacing seed URL to: {}", jobConfig.getInitUrl());
-                jobScraper.updateContext(jobConfig);
-                while (jobScraper.hasNextPage()) {
-                    /*
-                     * All code below is processing ONE PAGE of a job portal
-                     */
-                    if (currentTime.isAfter(jobHardTimeLimit)) {//hard stop after 2 hour
-                        return;
-                    }
-                    if (Thread.currentThread().isInterrupted()) {
-                        logger.info("Job matching interrupted, stopping gracefully...");
-                        return; // exit loop
-                    }
-
-                    List<WebElement> jobCardList = jobScraper.scrapeJobCardListing();
-
-                    for (WebElement jobCardWebElement : jobCardList) {
-                        JobPosting jobPosting = jobScraper.digestJobCard(jobCardWebElement);
-
-                        if (isBannedJob(jobPosting)) continue;
-
-                        Optional<JobPosting> jobPostingInDb = jobPostingRepository.findByJobId(jobPosting.getJobId());
-
-                        if (jobPostingInDb.isEmpty()) {
-                            jobPosting = jobScraper.scrapeJobDetails(jobPosting);
-                            jobPostingRepository.save(jobPosting);
-                        } else {
-                            jobPosting = jobPostingInDb.get();
-                            logger.info("Job already exists in the database: {}", jobPosting.getJobId());
-                        }
-
-                        queryAIs(jobPosting, jobConfig);
-                    }
-
-                    jobScraper.findNextPage();
-                }
-            }
-        }catch(Exception e){
-            logger.error("An expected error occurred during scraping: ", e);
-        }
-
-    }
 
 }

@@ -16,7 +16,7 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.util.List;
 
-@Profile({"default", "parttime", "unique"})
+@Profile({"default", "parttime", "ctgoodjobs"})
 @Primary
 @Service
 public class OllamaAIClient implements AIClient {

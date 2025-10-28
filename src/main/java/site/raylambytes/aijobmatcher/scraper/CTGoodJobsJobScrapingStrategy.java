@@ -1,9 +1,6 @@
 package site.raylambytes.aijobmatcher.scraper;
 
-import org.openqa.selenium.By;
-import org.openqa.selenium.NoSuchElementException;
-import org.openqa.selenium.WebDriver;
-import org.openqa.selenium.WebElement;
+import org.openqa.selenium.*;
 import org.openqa.selenium.remote.RemoteWebDriver;
 import org.openqa.selenium.remote.RemoteWebElement;
 import org.openqa.selenium.support.ui.ExpectedConditions;
@@ -15,6 +12,7 @@ import site.raylambytes.aijobmatcher.util.RetryUtils;
 
 import java.time.Duration;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
@@ -26,6 +24,8 @@ public class CTGoodJobsJobScrapingStrategy implements JobScrapingStrategy {
         String currentUrl = context.getCurrentUrl();
         logger.info("Retrieving job cards from: {}", currentUrl);
         RetryUtils.retryVoid(3, 2000, () -> listWebDriver.get(currentUrl));
+
+        handlePopups(listWebDriver);
 
         WebDriverWait wait = new WebDriverWait(listWebDriver, Duration.ofSeconds(10));
         wait.until(ExpectedConditions.presenceOfAllElementsLocatedBy(By.cssSelector("div.job-list-w")));
@@ -61,6 +61,8 @@ public class CTGoodJobsJobScrapingStrategy implements JobScrapingStrategy {
         logger.info("\uD83C\uDFE2 Company: {}", company);//Check
         logger.info("\uD83D\uDCCD Location: {}", location);
         logger.info("\uD83D\uDD17 URL: {}", jobUrl);
+
+
 
         JobPosting jobPosting = new JobPosting();
         jobPosting.setJobId(jobId);
@@ -125,4 +127,37 @@ public class CTGoodJobsJobScrapingStrategy implements JobScrapingStrategy {
             return Optional.empty();
         }
     }
+
+    public void handlePopups(WebDriver driver) {
+        try {
+            // Wait briefly for popup to appear
+            WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(2));
+
+            // Common popup patterns - adjust selectors based on your site
+            List<String> popupSelectors = Arrays.asList(
+                    "button[class*='close']",
+                    "button[class*='dismiss']",
+                    ".modal-close",
+                    "[aria-label='Close']",
+                    ".cookie-accept",
+                    ".notification-dismiss"
+            );
+
+            for (String selector : popupSelectors) {
+                try {
+                    WebElement popup = wait.until(
+                            ExpectedConditions.elementToBeClickable(By.cssSelector(selector))
+                    );
+                    popup.click();
+                    Thread.sleep(500); // Let popup close
+                    break;
+                } catch (TimeoutException e) {
+                    // This selector didn't match, try next
+                }
+            }
+        } catch (Exception e) {
+            // No popup found, continue
+        }
+    }
+
 }
